@@ -627,7 +627,7 @@
             <div class="panel-body" id="logBook" style="flex: 1; min-height: 0;">
                 <div class="log-entry"><span class="log-time">[System]</span> Bereit.</div>
             </div>
-            <div style="padding: 6px; background: #222; border-top: 1px solid var(--border-color); flex-shrink: 0;">
+            <div id="logInputContainer" style="padding: 6px; background: #222; border-top: 1px solid var(--border-color); flex-shrink: 0;">
                 <form id="addLogNoteForm" style="display: flex; gap: 5px;">
                     <input type="text" id="logNoteInput" placeholder="Info zu ausgewähltem Einsatz eintragen..." disabled style="flex: 1;">
                     <button type="submit" id="btnLogNote" disabled style="width: auto; padding: 4px 8px;">Eintragen</button>
@@ -736,7 +736,7 @@
         });
 
         db.collection('edp_logs').onSnapshot(snap => {
-            cloudData.logs = snap.docs.map(doc => ({ ...doc.data() }));
+            cloudData.logs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             cloudData.logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
             if (selectedIncidentId) {
                 renderLogsForIncident(selectedIncidentId);
@@ -1092,14 +1092,22 @@
     function setLogNoteActive(isActive, inc = null) {
         let input = document.getElementById('logNoteInput');
         let btn = document.getElementById('btnLogNote');
-        if (isActive && inc && inc.status !== 'Abgeschlossen') {
-            input.disabled = false;
-            btn.disabled = false;
-            input.placeholder = `Info zu Einsatz #${inc.id} eintragen...`;
+        let inputContainer = document.getElementById('logInputContainer');
+
+        if (isActive && inc) {
+            if (inc.status === 'Abgeschlossen') {
+                inputContainer.style.display = 'none'; // Versteckt das Eingabefeld bei beendeten Einsätzen komplett
+            } else {
+                inputContainer.style.display = 'block';
+                input.disabled = false;
+                btn.disabled = false;
+                input.placeholder = `Info zu Einsatz #${inc.id} eintragen...`;
+            }
         } else {
+            inputContainer.style.display = 'block';
             input.disabled = true;
             btn.disabled = true;
-            input.placeholder = inc && inc.status === 'Abgeschlossen' ? "Einsatz ist abgeschlossen." : "Erst Einsatz auswählen...";
+            input.placeholder = "Erst Einsatz auswählen...";
         }
     }
 
@@ -1153,7 +1161,7 @@
 
         let batchLogs = cloudData.logs.filter(l => l.incidentId === id);
         for (let l of batchLogs) {
-            if (l.docId) await db.collection('edp_logs').doc(l.docId).delete();
+            if (l.id) await db.collection('edp_logs').doc(l.id).delete();
         }
 
         selectedIncidentId = null;
@@ -1297,6 +1305,9 @@
     document.getElementById('addLogNoteForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         if (!selectedIncidentId) return;
+        let inc = cloudData.incidents.find(i => i.id === selectedIncidentId);
+        if (inc && inc.status === 'Abgeschlossen') return;
+
         let text = document.getElementById('logNoteInput').value.trim();
         if (!text) return;
 
@@ -1331,6 +1342,7 @@
         let logBook = document.getElementById('logBook');
         logBook.innerHTML = '';
 
+        let inc = cloudData.incidents.find(i => i.id === id);
         let filtered = cloudData.logs.filter(l => (l.incidentId === id || l.incidentId === 'System') && (l.createdBy === currentUser.user || l.incidentId === 'System'));
 
         if (filtered.length === 0) {
@@ -1342,6 +1354,9 @@
         sortedLogs.forEach(l => {
             logBook.innerHTML += `<div class="log-entry"><span class="log-time">[${l.time}]</span> ${l.text}</div>`;
         });
+
+        // Steuert das Eingabefeld je nach Status des gewählten Einsatzes
+        setLogNoteActive(true, inc);
     }
 </script>
 </body>
