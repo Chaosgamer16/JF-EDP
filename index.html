@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EDP-Light // JF Einsatzleitung</title>
+    
+    <!-- Firebase SDKs (Compat Versionen für direkte Browser-Nutzung ohne Node.js) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <style>
         :root {
             --bg-color: #121212;
@@ -139,7 +144,6 @@
             font-size: 0.85rem;
         }
 
-        /* Spezial-Panel für rechte Spalte: Füllt gleichmäßig auf */
         .right-column-panel {
             flex: 1;
             min-height: 0;
@@ -193,7 +197,7 @@
         button.blue { background-color: var(--accent-blue); }
         button.blue:hover { background-color: #115293; }
 
-        /* TABELLE (Mittelspalte) */
+        /* TABELLE */
         .incident-list-panel {
             grid-column: 2;
             grid-row: 1;
@@ -261,7 +265,7 @@
         }
         .log-time { color: var(--text-muted); font-family: monospace; }
 
-        /* MODALS / FENSTER */
+        /* MODALS */
         .custom-modal {
             display: none;
             position: fixed;
@@ -545,41 +549,118 @@
 
     </div>
 
-    <!-- JAVASCRIPT LOGIK -->
+    <!-- JAVASCRIPT LOGIK MIT FIREBASE FIRESTORE -->
     <script>
-        if (!localStorage.getItem('edp_accounts')) {
-            localStorage.setItem('edp_accounts', JSON.stringify([
-                { user: 'adminedp', pass: 'mariie.192', isतुAdmin: true, canEdit: true }
-            ]));
-        }
+        // Deine Firebase Konfiguration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBhDbmDoukjE-gAcHqJu6Gd7d3SySRY3YQ",
+            authDomain: "jf-edp.firebaseapp.com",
+            projectId: "jf-edp",
+            storageBucket: "jf-edp.firebasestorage.app",
+            messagingSenderId: "245733899449",
+            appId: "1:245733899449:web:88883f5707642fb08aef68",
+            measurementId: "G-61N3B30TL2"
+        };
 
-        if (!localStorage.getItem('edp_keywords')) {
-            localStorage.setItem('edp_keywords', JSON.stringify([
-                { name: 'Kleinbrand (Übung)' },
-                { name: 'Technische Hilfeleistung' }
-            ]));
-        }
-
-        if (!localStorage.getItem('edp_incidents')) localStorage.setItem('edp_incidents', JSON.stringify([]));
-        if (!localStorage.getItem('edp_persons')) localStorage.setItem('edp_persons', JSON.stringify([]));
-        if (!localStorage.getItem('edp_vehicles')) localStorage.setItem('edp_vehicles', JSON.stringify([]));
-        if (!localStorage.getItem('edp_assignments')) localStorage.setItem('edp_assignments', JSON.stringify([]));
-        if (!localStorage.getItem('edp_logs')) localStorage.setItem('edp_logs', JSON.stringify([]));
+        // Firebase initialisieren
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
         let currentUser = null;
         let selectedIncidentId = null;
 
+        // Speicher-Caches (werden live mit Firebase synchronisiert)
+        let cloudData = {
+            accounts: [],
+            keywords: [],
+            incidents: [],
+            persons: [],
+            vehicles: [],
+            assignments: [],
+            logs: []
+        };
+
+        // Live Uhrzeit
         setInterval(() => {
             document.getElementById('liveClock').innerText = new Date().toTimeString().split(' ')[0];
         }, 1000);
 
+        // Firestore Realtime Listeners einrichten beim Laden
+        async function initFirebaseSync() {
+            // Initialer Check ob Standard-Admin existiert, falls Datenbank leer ist
+            const accSnap = await db.collection('edp_accounts').get();
+            if (accSnap.empty) {
+                await db.collection('edp_accounts').doc('adminedp').set({
+                    user: 'adminedp',
+                    pass: 'mariie.192',
+                    isAdmin: true,
+                    canEdit: true
+                });
+            }
+
+            const keySnap = await db.collection('edp_keywords').get();
+            if (keySnap.empty) {
+                await db.collection('edp_keywords').add({ name: 'Kleinbrand (Übung)' });
+                await db.collection('edp_keywords').add({ name: 'Technische Hilfeleistung' });
+            }
+
+            // Live-Listener für alle Sammlungen
+            db.collection('edp_accounts').onSnapshot(snap => {
+                cloudData.accounts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                if (currentUser && currentUser.isAdmin) renderAdminLists();
+            });
+
+            db.collection('edp_keywords').onSnapshot(snap => {
+                cloudData.keywords = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                loadFormInputs();
+                if (currentUser && currentUser.isAdmin) renderAdminLists();
+            });
+
+            db.collection('edp_incidents').onSnapshot(snap => {
+                cloudData.incidents = snap.docs.map(doc => ({ ...doc.data() }));
+                // Sortieren nach ID absteigend (neueste zuerst)
+                cloudData.incidents.sort((a, b) => b.id - a.id);
+                renderTable();
+            });
+
+            db.collection('edp_persons').onSnapshot(snap => {
+                cloudData.persons = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderPersons();
+                updateAssignDropdowns();
+            });
+
+            db.collection('edp_vehicles').onSnapshot(snap => {
+                cloudData.vehicles = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderVehicles();
+                updateAssignDropdowns();
+            });
+
+            db.collection('edp_assignments').onSnapshot(snap => {
+                cloudData.assignments = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderAssignments();
+            });
+
+            db.collection('edp_logs').onSnapshot(snap => {
+                cloudData.logs = snap.docs.map(doc => ({ ...doc.data() }));
+                // Sortieren nach Zeit
+                cloudData.logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                if (selectedIncidentId) {
+                    renderLogsForIncident(selectedIncidentId);
+                } else {
+                    renderGlobalLogs();
+                }
+            });
+        }
+
+        initFirebaseSync();
+
+        // Login Logik
         document.getElementById('loginForm').addEventListener('submit', (e) => {
             e.preventDefault();
             let u = document.getElementById('loginUser').value.trim();
             let p = document.getElementById('loginPass').value.trim();
             
-            let accounts = JSON.parse(localStorage.getItem('edp_accounts'));
-            let found = accounts.find(acc => acc.user === u && acc.pass === p);
+            let found = cloudData.accounts.find(acc => acc.user === u && acc.pass === p);
 
             if (found) {
                 currentUser = found;
@@ -634,11 +715,9 @@
         }
 
         function loadFormInputs() {
-            let keys = JSON.parse(localStorage.getItem('edp_keywords'));
             let keySelect = document.getElementById('incType');
-
             keySelect.innerHTML = '';
-            keys.forEach(k => {
+            cloudData.keywords.forEach(k => {
                 keySelect.innerHTML += `<option value="${k.name}">${k.name}</option>`;
             });
         }
@@ -654,7 +733,8 @@
             document.getElementById('changePassError').innerText = '';
         }
 
-        document.getElementById('changePasswordForm').addEventListener('submit', (e) => {
+        // Passwort ändern
+        document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             let oldP = document.getElementById('oldPassInput').value;
             let newP = document.getElementById('newPassInput').value;
@@ -665,112 +745,88 @@
                 return;
             }
 
-            let accounts = JSON.parse(localStorage.getItem('edp_accounts'));
-            let accIndex = accounts.findIndex(a => a.user === currentUser.user);
-
-            if (accIndex === -1 || accounts[accIndex].pass !== oldP) {
+            let accDoc = cloudData.accounts.find(a => a.user === currentUser.user);
+            if (!accDoc || accDoc.pass !== oldP) {
                 document.getElementById('changePassError').innerText = "Das alte Passwort ist falsch!";
                 return;
             }
 
-            accounts[accIndex].pass = newP;
+            await db.collection('edp_accounts').doc(accDoc.id).update({ pass: newP });
             currentUser.pass = newP;
-            localStorage.setItem('edp_accounts', JSON.stringify(accounts));
 
             alert("Passwort erfolgreich geändert!");
             togglePasswordModal(false);
         });
 
-        function adminResetPassword(username) {
+        async function adminResetPassword(docId, username) {
             let newPass = prompt(`Neues Passwort für Benutzer "${username}" eingeben:`);
             if (!newPass || newPass.trim() === "") return;
 
-            let accounts = JSON.parse(localStorage.getItem('edp_accounts'));
-            let acc = accounts.find(a => a.user === username);
-            if (acc) {
-                acc.pass = newPass.trim();
-                localStorage.setItem('edp_accounts', JSON.stringify(accounts));
-                alert(`Passwort für "${username}" wurde erfolgreich zurückgesetzt!`);
-                renderAdminLists();
-            }
+            await db.collection('edp_accounts').doc(docId).update({ pass: newPass.trim() });
+            alert(`Passwort für "${username}" wurde erfolgreich zurückgesetzt!`);
         }
 
-        function adminDeleteAccount(username) {
+        async function adminDeleteAccount(docId, username) {
             if (username === 'adminedp') {
                 alert("Der Haupt-Admin-Account kann nicht gelöscht werden!");
                 return;
             }
             if (!confirm(`Account "${username}" wirklich löschen?`)) return;
 
-            let accounts = JSON.parse(localStorage.getItem('edp_accounts'));
-            accounts = accounts.filter(a => a.user !== username);
-            localStorage.setItem('edp_accounts', JSON.stringify(accounts));
-            renderAdminLists();
+            await db.collection('edp_accounts').doc(docId).delete();
         }
 
         function renderAdminLists() {
-            let keys = JSON.parse(localStorage.getItem('edp_keywords'));
             let keyDiv = document.getElementById('adminKeywordList');
             keyDiv.innerHTML = '';
-            keys.forEach((k, idx) => {
-                keyDiv.innerHTML += `<div class="item-row"><span>${k.name}</span> <button class="secondary" style="width:auto; padding:2px 5px;" onclick="deleteKeyword(${idx})">Löschen</button></div>`;
+            cloudData.keywords.forEach((k) => {
+                keyDiv.innerHTML += `<div class="item-row"><span>${k.name}</span> <button class="secondary" style="width:auto; padding:2px 5px;" onclick="deleteKeyword('${k.id}')">Löschen</button></div>`;
             });
 
-            let accs = JSON.parse(localStorage.getItem('edp_accounts'));
             let accDiv = document.getElementById('adminAccountList');
             accDiv.innerHTML = '';
-            accs.forEach(a => {
+            cloudData.accounts.forEach(a => {
                 let badgeAreaClass = a.isAdmin ? 'badge-admin' : 'badge-jf';
                 let areaLabel = a.isAdmin ? 'Administrator' : 'Jugendfeuerwehr';
                 accDiv.innerHTML += `
                     <div class="item-row">
                         <span><strong>${a.user}</strong> <span class="badge ${badgeAreaClass}">${areaLabel}</span> (Schreiben: ${a.canEdit ? 'Ja' : 'Nein'})</span> 
                         <div style="display:flex; gap:4px;">
-                            <button class="secondary" style="width:auto; padding:2px 6px;" onclick="adminResetPassword('${a.user}')">PW zurücksetzen</button>
-                            ${a.user !== 'adminedp' ? `<button class="secondary" style="width:auto; padding:2px 6px; background:#b71c1c;" onclick="adminDeleteAccount('${a.user}')">Löschen</button>` : ''}
+                            <button class="secondary" style="width:auto; padding:2px 6px;" onclick="adminResetPassword('${a.id}', '${a.user}')">PW zurücksetzen</button>
+                            ${a.user !== 'adminedp' ? `<button class="secondary" style="width:auto; padding:2px 6px; background:#b71c1c;" onclick="adminDeleteAccount('${a.id}', '${a.user}')">Löschen</button>` : ''}
                         </div>
                     </div>`;
             });
         }
 
-        document.getElementById('addKeywordForm').addEventListener('submit', (e) => {
+        document.getElementById('addKeywordForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             let name = document.getElementById('newKeyName').value.trim();
-            let keys = JSON.parse(localStorage.getItem('edp_keywords'));
-            keys.push({ name });
-            localStorage.setItem('edp_keywords', JSON.stringify(keys));
+            await db.collection('edp_keywords').add({ name });
             document.getElementById('newKeyName').value = '';
-            renderAdminLists();
-            loadFormInputs();
         });
 
-        document.getElementById('addAccountForm').addEventListener('submit', (e) => {
+        document.getElementById('addAccountForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             let user = document.getElementById('accUser').value.trim();
             let pass = document.getElementById('accPass').value.trim();
             let canEdit = document.getElementById('accCanEdit').value === 'true';
 
-            let accs = JSON.parse(localStorage.getItem('edp_accounts'));
-            if (accs.some(a => a.user === user)) {
+            if (cloudData.accounts.some(a => a.user === user)) {
                 alert("Benutzername existiert bereits!");
                 return;
             }
-            accs.push({ user, pass, isAdmin: false, canEdit });
-            localStorage.setItem('edp_accounts', JSON.stringify(accs));
+            await db.collection('edp_accounts').add({ user, pass, isAdmin: false, canEdit });
             document.getElementById('addAccountForm').reset();
-            renderAdminLists();
             alert("Account erfolgreich erstellt!");
         });
 
-        function deleteKeyword(idx) {
-            let keys = JSON.parse(localStorage.getItem('edp_keywords'));
-            keys.splice(idx, 1);
-            localStorage.setItem('edp_keywords', JSON.stringify(keys));
-            renderAdminLists();
-            loadFormInputs();
+        async function deleteKeyword(id) {
+            await db.collection('edp_keywords').doc(id).delete();
         }
 
-        document.getElementById('incidentForm').addEventListener('submit', (e) => {
+        // Einsatz anlegen
+        document.getElementById('incidentForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (currentUser.canEdit === false && !currentUser.isAdmin) return;
 
@@ -779,10 +835,10 @@
             let patient = document.getElementById('incPatient').value.trim() || 'Unbekannt';
             let description = document.getElementById('incDescription').value.trim();
             let timeString = new Date().toTimeString().substring(0, 5);
+            let incId = Math.floor(100 + Math.random() * 900);
 
-            let incidents = JSON.parse(localStorage.getItem('edp_incidents'));
             let newInc = {
-                id: Math.floor(100 + Math.random() * 900),
+                id: incId,
                 time: timeString,
                 type: type,
                 location: location,
@@ -791,28 +847,24 @@
                 status: 'Neu'
             };
 
-            incidents.unshift(newInc);
-            selectedIncidentId = newInc.id;
-            localStorage.setItem('edp_incidents', JSON.stringify(incidents));
+            await db.collection('edp_incidents').doc(incId.toString()).set(newInc);
+            selectedIncidentId = incId;
 
-            addLog(newInc.id, `Einsatz #${newInc.id} (${type}) erfasst.`);
+            await addLog(incId, `Einsatz #${incId} (${type}) erfasst.`);
             if (description) {
-                addLog(newInc.id, `Beschreibung: ${description}`);
+                await addLog(incId, `Beschreibung: ${description}`);
             }
 
             document.getElementById('incLocationText').value = '';
             document.getElementById('incDescription').value = '';
             document.getElementById('incPatient').value = '';
-            renderTable();
-            renderDetails(newInc.id);
         });
 
         function renderTable() {
-            let incidents = JSON.parse(localStorage.getItem('edp_incidents'));
             let tbody = document.getElementById('incidentTableBody');
             tbody.innerHTML = '';
 
-            let filtered = incidents;
+            let filtered = cloudData.incidents;
 
             if (filtered.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Keine Einsätze vorhanden.</td></tr>`;
@@ -851,7 +903,7 @@
             });
 
             if (selectedIncidentId) {
-                let inc = incidents.find(i => i.id === selectedIncidentId);
+                let inc = filtered.find(i => i.id === selectedIncidentId);
                 if (inc) {
                     setCrewPanelActive(true, inc);
                     setLogNoteActive(true, inc);
@@ -913,8 +965,7 @@
         }
 
         function renderDetails(id) {
-            let incidents = JSON.parse(localStorage.getItem('edp_incidents'));
-            let inc = incidents.find(i => i.id === id);
+            let inc = cloudData.incidents.find(i => i.id === id);
             let panel = document.getElementById('detailPanel');
 
             if (!inc) {
@@ -946,119 +997,97 @@
             renderLogsForIncident(id);
         }
 
-        function updateStatus(id, newStatus) {
-            let incidents = JSON.parse(localStorage.getItem('edp_incidents'));
-            let inc = incidents.find(i => i.id === id);
-            if (inc) {
-                inc.status = newStatus;
-                localStorage.setItem('edp_incidents', JSON.stringify(incidents));
-                addLog(inc.id, `Einsatz #${inc.id} Status geändert zu: ${newStatus}`);
-                renderTable();
-                renderDetails(id);
-            }
+        async function updateStatus(id, newStatus) {
+            await db.collection('edp_incidents').doc(id.toString()).update({ status: newStatus });
+            await addLog(id, `Einsatz #${id} Status geändert zu: ${newStatus}`);
         }
 
-        function deleteIncident(id) {
+        async function deleteIncident(id) {
             if (!confirm(`Einsatz #${id} wirklich unwiderruflich löschen?`)) return;
 
-            let incidents = JSON.parse(localStorage.getItem('edp_incidents'));
-            incidents = incidents.filter(i => i.id !== id);
-            localStorage.setItem('edp_incidents', JSON.stringify(incidents));
+            await db.collection('edp_incidents').doc(id.toString()).delete();
 
-            let assignments = JSON.parse(localStorage.getItem('edp_assignments')).filter(a => a.incidentId !== id);
-            localStorage.setItem('edp_assignments', JSON.stringify(assignments));
+            // Zugehörige Zuteilungen löschen
+            let batchAssignments = cloudData.assignments.filter(a => a.incidentId === id);
+            for (let a of batchAssignments) {
+                await db.collection('edp_assignments').doc(a.id).delete();
+            }
 
-            let logs = JSON.parse(localStorage.getItem('edp_logs')).filter(l => l.incidentId !== id);
-            localStorage.setItem('edp_logs', JSON.stringify(logs));
+            // Zugehörige Logs löschen
+            let batchLogs = cloudData.logs.filter(l => l.incidentId === id);
+            for (let l of batchLogs) {
+                if (l.docId) await db.collection('edp_logs').doc(l.docId).delete();
+            }
 
             selectedIncidentId = null;
             renderTable();
-            renderGlobalLogs();
         }
 
-        document.getElementById('addPersonForm').addEventListener('submit', (e) => {
+        // Personal hinzufügen
+        document.getElementById('addPersonForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             let name = document.getElementById('personName').value.trim();
             let role = document.getElementById('personRole').value;
-            let persons = JSON.parse(localStorage.getItem('edp_persons'));
-            persons.push({ name, role });
-            localStorage.setItem('edp_persons', JSON.stringify(persons));
+            await db.collection('edp_persons').add({ name, role });
             document.getElementById('personName').value = '';
-            renderPersons();
-            updateAssignDropdowns();
         });
 
         function renderPersons() {
-            let persons = JSON.parse(localStorage.getItem('edp_persons'));
             let list = document.getElementById('personList');
             list.innerHTML = '';
 
-            persons.forEach((p, idx) => {
+            cloudData.persons.forEach((p) => {
                 let roleBadge = p.role === 'Betreuer' ? '<span class="badge badge-betreuer">Betreuer</span>' : '<span class="badge badge-jf">JF</span>';
-                list.innerHTML += `<div class="item-row"><span>${p.name} ${roleBadge}</span> <button class="secondary" style="width:auto; padding:2px 5px;" onclick="deletePerson(${idx})">X</button></div>`;
+                list.innerHTML += `<div class="item-row"><span>${p.name} ${roleBadge}</span> <button class="secondary" style="width:auto; padding:2px 5px;" onclick="deletePerson('${p.id}')">X</button></div>`;
             });
         }
 
-        function deletePerson(idx) {
-            let persons = JSON.parse(localStorage.getItem('edp_persons'));
-            persons.splice(idx, 1);
-            localStorage.setItem('edp_persons', JSON.stringify(persons));
-            renderPersons();
-            updateAssignDropdowns();
+        async function deletePerson(id) {
+            await db.collection('edp_persons').doc(id).delete();
         }
 
-        document.getElementById('addVehicleForm').addEventListener('submit', (e) => {
+        // Fahrzeuge hinzufügen
+        document.getElementById('addVehicleForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             let type = document.getElementById('vehType').value.trim();
             let funk = document.getElementById('vehFunk').value.trim();
 
-            let vehicles = JSON.parse(localStorage.getItem('edp_vehicles'));
-            vehicles.push({ type, funk });
-            localStorage.setItem('edp_vehicles', JSON.stringify(vehicles));
+            await db.collection('edp_vehicles').add({ type, funk });
 
             document.getElementById('vehType').value = '';
             document.getElementById('vehFunk').value = '';
-            renderVehicles();
-            updateAssignDropdowns();
         });
 
         function renderVehicles() {
-            let vehicles = JSON.parse(localStorage.getItem('edp_vehicles'));
             let list = document.getElementById('vehicleList');
             list.innerHTML = '';
 
-            vehicles.forEach((v, idx) => {
-                list.innerHTML += `<div class="item-row"><span>${v.type} (${v.funk})</span> <button class="secondary" style="width:auto; padding:2px 5px;" onclick="deleteVehicle(${idx})">X</button></div>`;
+            cloudData.vehicles.forEach((v) => {
+                list.innerHTML += `<div class="item-row"><span>${v.type} (${v.funk})</span> <button class="secondary" style="width:auto; padding:2px 5px;" onclick="deleteVehicle('${v.id}')">X</button></div>`;
             });
         }
 
-        function deleteVehicle(idx) {
-            let vehicles = JSON.parse(localStorage.getItem('edp_vehicles'));
-            vehicles.splice(idx, 1);
-            localStorage.setItem('edp_vehicles', JSON.stringify(vehicles));
-            renderVehicles();
-            updateAssignDropdowns();
+        async function deleteVehicle(id) {
+            await db.collection('edp_vehicles').doc(id).delete();
         }
 
         function updateAssignDropdowns() {
-            let vehicles = JSON.parse(localStorage.getItem('edp_vehicles'));
-            let persons = JSON.parse(localStorage.getItem('edp_persons'));
-
             let vSelect = document.getElementById('assignVehicle');
             let pSelect = document.getElementById('assignPerson');
 
             vSelect.innerHTML = '<option value="">-- Fahrzeug --</option>';
-            vehicles.forEach(v => {
+            cloudData.vehicles.forEach(v => {
                 vSelect.innerHTML += `<option value="${v.type} (${v.funk})">${v.type} (${v.funk})</option>`;
             });
 
             pSelect.innerHTML = '<option value="">-- Person --</option>';
-            persons.forEach(p => {
+            cloudData.persons.forEach(p => {
                 pSelect.innerHTML += `<option value="${p.name}">${p.name} (${p.role})</option>`;
             });
         }
 
-        document.getElementById('assignCrewForm').addEventListener('submit', (e) => {
+        // Personal zuteilen
+        document.getElementById('assignCrewForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!selectedIncidentId) return;
 
@@ -1068,21 +1097,17 @@
 
             if (!vehicle || !person || !position) return;
 
-            let assignments = JSON.parse(localStorage.getItem('edp_assignments'));
-            let incidents = JSON.parse(localStorage.getItem('edp_incidents'));
-            let inc = incidents.find(i => i.id === selectedIncidentId);
-
+            let inc = cloudData.incidents.find(i => i.id === selectedIncidentId);
             if (inc && inc.status === 'Abgeschlossen') return;
             
-            let existingIdx = assignments.findIndex(a => a.incidentId === selectedIncidentId && a.person === person);
-            if (existingIdx !== -1) {
-                assignments[existingIdx] = { incidentId: selectedIncidentId, vehicle, person, position };
+            // Prüfen ob Person schon zugeteilt ist
+            let existing = cloudData.assignments.find(a => a.incidentId === selectedIncidentId && a.person === person);
+            if (existing) {
+                await db.collection('edp_assignments').doc(existing.id).update({ vehicle, position });
             } else {
-                assignments.push({ incidentId: selectedIncidentId, vehicle, person, position });
+                await db.collection('edp_assignments').add({ incidentId: selectedIncidentId, vehicle, person, position });
             }
 
-            localStorage.setItem('edp_assignments', JSON.stringify(assignments));
-            renderAssignments();
             document.getElementById('assignCrewForm').reset();
             updateAssignDropdowns();
         });
@@ -1090,13 +1115,11 @@
         function renderAssignments() {
             if (!selectedIncidentId) return;
 
-            let assignments = JSON.parse(localStorage.getItem('edp_assignments'));
-            let incidents = JSON.parse(localStorage.getItem('edp_incidents'));
-            let inc = incidents.find(i => i.id === selectedIncidentId);
+            let inc = cloudData.incidents.find(i => i.id === selectedIncidentId);
             let list = document.getElementById('assignedCrewList');
             list.innerHTML = '';
 
-            let filtered = assignments.filter(a => a.incidentId === selectedIncidentId);
+            let filtered = cloudData.assignments.filter(a => a.incidentId === selectedIncidentId);
 
             if (filtered.length === 0) {
                 list.innerHTML = `<div style="color:var(--text-muted); text-align:center; font-size:0.75rem; margin-top:5px;">Keine Zuteilungen vorhanden.</div>`;
@@ -1107,8 +1130,7 @@
             let canAction = (currentUser.canEdit || currentUser.isAdmin) && !isClosed;
 
             filtered.forEach((a) => {
-                let globalIdx = assignments.findIndex(item => item.incidentId === a.incidentId && item.person === a.person);
-                let deleteBtnHtml = canAction ? `<button class="secondary" style="width:auto; padding:2px 5px;" onclick="deleteAssignment(${globalIdx})">X</button>` : '';
+                let deleteBtnHtml = canAction ? `<button class="secondary" style="width:auto; padding:2px 5px;" onclick="deleteAssignment('${a.id}')">X</button>` : '';
                 
                 list.innerHTML += `
                     <div class="item-row">
@@ -1119,58 +1141,55 @@
             });
         }
 
-        function deleteAssignment(idx) {
-            let assignments = JSON.parse(localStorage.getItem('edp_assignments'));
-            assignments.splice(idx, 1);
-            localStorage.setItem('edp_assignments', JSON.stringify(assignments));
-            renderAssignments();
+        async function deleteAssignment(id) {
+            await db.collection('edp_assignments').doc(id).delete();
         }
 
-        document.getElementById('addLogNoteForm').addEventListener('submit', (e) => {
+        // Tagebuch Logik
+        document.getElementById('addLogNoteForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!selectedIncidentId) return;
             let text = document.getElementById('logNoteInput').value.trim();
             if (!text) return;
 
-            addLog(selectedIncidentId, `[Einsatz #${selectedIncidentId}] ${text}`);
+            await addLog(selectedIncidentId, `[Einsatz #${selectedIncidentId}] ${text}`);
             document.getElementById('logNoteInput').value = '';
         });
 
-        function addLog(incId, text) {
-            let logs = JSON.parse(localStorage.getItem('edp_logs'));
+        async function addLog(incId, text) {
             let time = new Date().toTimeString().substring(0, 8);
-            logs.unshift({ incidentId: incId, time, text });
-            localStorage.setItem('edp_logs', JSON.stringify(logs));
-            renderGlobalLogs();
+            let timestamp = Date.now();
+            await db.collection('edp_logs').add({ incidentId: incId, time, text, timestamp });
         }
 
         function renderGlobalLogs() {
-            let logs = JSON.parse(localStorage.getItem('edp_logs'));
             let logBook = document.getElementById('logBook');
             logBook.innerHTML = '';
 
-            if (logs.length === 0) {
+            if (cloudData.logs.length === 0) {
                 logBook.innerHTML = `<div class="log-entry"><span class="log-time">[System]</span> Bereit.</div>`;
                 return;
             }
 
-            logs.forEach(l => {
+            // Älteste zuerst anzeigen für den Verlauf
+            let sortedLogs = [...cloudData.logs].reverse();
+            sortedLogs.forEach(l => {
                 logBook.innerHTML += `<div class="log-entry"><span class="log-time">[${l.time}]</span> ${l.text}</div>`;
             });
         }
 
         function renderLogsForIncident(id) {
-            let logs = JSON.parse(localStorage.getItem('edp_logs'));
             let logBook = document.getElementById('logBook');
             logBook.innerHTML = '';
 
-            let filtered = logs.filter(l => l.incidentId === id || l.incidentId === 'System');
+            let filtered = cloudData.logs.filter(l => l.incidentId === id || l.incidentId === 'System');
             if (filtered.length === 0) {
                 logBook.innerHTML = `<div class="log-entry"><span class="log-time">[System]</span> Keine Einträge.</div>`;
                 return;
             }
 
-            filtered.forEach(l => {
+            let sortedLogs = [...filtered].reverse();
+            sortedLogs.forEach(l => {
                 logBook.innerHTML += `<div class="log-entry"><span class="log-time">[${l.time}]</span> ${l.text}</div>`;
             });
         }
