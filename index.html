@@ -6,8 +6,8 @@
     <title>EDP-Light // JF Einsatzleitung</title>
 
     <!-- Browser-Tab & iPad / Tablet App-Icon (Hellroter Hintergrund) -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23ff6b6b'/><g transform='translate(8, 8)'><rect x='2' y='2' width='36' height='26' rx='4' stroke='%23ffffff' stroke-width='3' fill='%23121212'/><path d='M15 34H25' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'/><path d='M20 28V34' stroke='%23ffffff' stroke-width='3'/><path d='M20 10C20 10 14 15 14 18.5C14 20.9853 16.0147 23 18.5 23C20.9853 23 23 20.9853 23 18.5C23 15 20 10 20 10Z' fill='%23d32f2f'/><circle cx='20' cy='18' r='2.5' fill='%23ffffff'/></g></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23ff6b6b'/><g transform='translate(8, 8)'><rect x='2' y='2' width='36' height='26' rx='4' stroke='%23ffffff' stroke-width='3' fill='%23121212'/><path d='M15 34H25' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'/><path d='M20 28V34' stroke='%23ffffff' stroke-width='3'/><path d='M20 10C20 10 14 15 14 18.5C14 20.9853 16.0147 23 18.5 23C20.9853 23 23 20.9853 23 18.5C23 15 20 10 20 10Z' fill='%23d32f2f'/><circle cx='20' cy='18' r='2.5' fill='%23ffffff'/></g></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23ff6b6b'/><g transform='translate(8, 8)'><rect x='2' y='2' width='36' height='26' rx='4' stroke='%23ffffff' stroke-width='3' fill='%23121212'/><path d='M15 34H25' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'/><path d='M20 28V34' stroke='%23ffffff' stroke-width='3'/><path d='M20 10C20 10 14 15 14 18.5C14 20.9853 16.0147 23 18.5 23C20.9853 23 23 20.9853 23 18.5C23 15 20 10 20 10Z' fill='%23d32f2f'/><circle cx='20' cy='18' r='2.5' fill='%23ffffff'/></g>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23ff6b6b'/><g transform='translate(8, 8)'><rect x='2' y='2' width='36' height='26' rx='4' stroke='%23ffffff' stroke-width='3' fill='%23121212'/><path d='M15 34H25' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'/><path d='M20 28V34' stroke='%23ffffff' stroke-width='3'/><path d='M20 10C20 10 14 15 14 18.5C14 20.9853 16.0147 23 18.5 23C20.9853 23 23 20.9853 23 18.5C23 15 20 10 20 10Z' fill='%23d32f2f'/><circle cx='20' cy='18' r='2.5' fill='%23ffffff'/></g>">
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -741,7 +741,7 @@
             if (selectedIncidentId) {
                 renderLogsForIncident(selectedIncidentId);
             } else {
-                renderGlobalLogs();
+                renderEmptyLogs();
             }
         });
     }
@@ -838,7 +838,7 @@
         renderVehicles();
         setCrewPanelActive(false, null);
         setLogNoteActive(false, null);
-        renderGlobalLogs();
+        renderEmptyLogs();
         if (currentUser.isAdmin || currentUser.canEdit) renderAdminLists();
     }
 
@@ -1010,6 +1010,7 @@
             selectedIncidentId = null;
             setCrewPanelActive(false, null);
             setLogNoteActive(false, null);
+            renderEmptyLogs();
             renderDetails(null);
             return;
         }
@@ -1152,6 +1153,12 @@
     async function deleteIncident(id) {
         if (!confirm(`Einsatz #${id} wirklich unwiderruflich löschen?`)) return;
 
+        // Sofort das Tagebuch und den Status für diesen Einsatz zurücksetzen, damit nichts hängen bleibt
+        selectedIncidentId = null;
+        renderEmptyLogs();
+        setCrewPanelActive(false, null);
+        setLogNoteActive(false, null);
+
         await db.collection('edp_incidents').doc(id.toString()).delete();
 
         let batchAssignments = cloudData.assignments.filter(a => a.incidentId === id);
@@ -1164,7 +1171,6 @@
             if (l.id) await db.collection('edp_logs').doc(l.id).delete();
         }
 
-        selectedIncidentId = null;
         renderTable();
     }
 
@@ -1321,21 +1327,9 @@
         await db.collection('edp_logs').add({ incidentId: incId, createdBy: currentUser.user, time, text, timestamp });
     }
 
-    function renderGlobalLogs() {
+    function renderEmptyLogs() {
         let logBook = document.getElementById('logBook');
-        logBook.innerHTML = '';
-
-        let filtered = cloudData.logs.filter(l => l.createdBy === currentUser.user || l.incidentId === 'System');
-
-        if (filtered.length === 0) {
-            logBook.innerHTML = `<div class="log-entry"><span class="log-time">[System]</span> Bereit.</div>`;
-            return;
-        }
-
-        let sortedLogs = [...filtered].reverse();
-        sortedLogs.forEach(l => {
-            logBook.innerHTML += `<div class="log-entry"><span class="log-time">[${l.time}]</span> ${l.text}</div>`;
-        });
+        logBook.innerHTML = `<div class="log-entry"><span class="log-time">[System]</span> Bereit.</div>`;
     }
 
     function renderLogsForIncident(id) {
@@ -1343,7 +1337,12 @@
         logBook.innerHTML = '';
 
         let inc = cloudData.incidents.find(i => i.id === id);
-        let filtered = cloudData.logs.filter(l => (l.incidentId === id || l.incidentId === 'System') && (l.createdBy === currentUser.user || l.incidentId === 'System'));
+        if (!inc) {
+            renderEmptyLogs();
+            return;
+        }
+
+        let filtered = cloudData.logs.filter(l => l.incidentId === id && l.createdBy === currentUser.user);
 
         if (filtered.length === 0) {
             logBook.innerHTML = `<div class="log-entry"><span class="log-time">[System]</span> Keine Einträge.</div>`;
@@ -1355,7 +1354,6 @@
             logBook.innerHTML += `<div class="log-entry"><span class="log-time">[${l.time}]</span> ${l.text}</div>`;
         });
 
-        // Steuert das Eingabefeld je nach Status des gewählten Einsatzes
         setLogNoteActive(true, inc);
     }
 </script>
