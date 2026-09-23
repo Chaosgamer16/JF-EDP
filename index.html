@@ -333,24 +333,24 @@
     </div>
 </div>
 
-<!-- ADMIN PANEL MODAL -->
+<!-- ADMIN / VERWALTUNGS-PANEL MODAL -->
 <div id="adminModal" class="custom-modal">
     <div class="modal-content">
         <div class="panel-header">
-            <span>Administrator-Verwaltung (Stammdaten & Accounts)</span>
+            <span id="modalHeaderTitle">Verwaltung</span>
             <button class="secondary" style="width: auto; padding: 2px 6px;" onclick="toggleAdminModal(false)">Schließen</button>
         </div>
         <div class="modal-body">
             <div class="admin-section">
-                <h3>Einsatz-Stichworte verwalten</h3>
+                <h3>Alarmstichworte verwalten</h3>
                 <form id="addKeywordForm" style="display: flex; gap: 8px; margin-bottom: 8px;">
-                    <input type="text" id="newKeyName" placeholder="Stichwort" required style="flex: 2;">
+                    <input type="text" id="newKeyName" placeholder="Neues Stichwort" required style="flex: 2;">
                     <button type="submit" style="flex: 1;">Hinzufügen</button>
                 </form>
-                <div id="adminKeywordList" style="max-height: 100px; overflow-y: auto;"></div>
+                <div id="adminKeywordList" style="max-height: 120px; overflow-y: auto;"></div>
             </div>
 
-            <div class="admin-section">
+            <div class="admin-section" id="accountManagementSection" style="display: none;">
                 <h3>Benutzer-Accounts verwalten & anlegen</h3>
                 <form id="addAccountForm" style="margin-bottom: 12px;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 6px;">
@@ -406,7 +406,7 @@
     <div class="header-right">
         <span id="currentUserDisplay" style="font-size: 0.85rem; color: var(--text-muted);">Eingeloggt als: -</span>
         <button class="secondary" style="width: auto; padding: 4px 8px; font-size: 0.75rem;" onclick="togglePasswordModal(true)">Passwort ändern</button>
-        <button id="adminBtn" class="blue" style="width: auto; padding: 4px 10px; display: none;" onclick="toggleAdminModal(true)">Admin-Menü</button>
+        <button id="adminBtn" class="blue" style="width: auto; padding: 4px 10px; display: none;" onclick="toggleAdminModal(true)">Verwaltung</button>
         <div class="clock" id="liveClock">00:00:00</div>
         <button class="secondary" style="width: auto; padding: 4px 10px;" onclick="logout()">Abmelden</button>
     </div>
@@ -617,20 +617,20 @@
 
         const keySnap = await db.collection('edp_keywords').get();
         if (keySnap.empty) {
-            await db.collection('edp_keywords').add({ name: 'Kleinbrand (Übung)' });
-            await db.collection('edp_keywords').add({ name: 'Technische Hilfeleistung' });
+            await db.collection('edp_keywords').add({ name: 'Kleinbrand (Übung)', createdBy: 'adminedp' });
+            await db.collection('edp_keywords').add({ name: 'Technische Hilfeleistung', createdBy: 'adminedp' });
         }
 
         db.collection('edp_accounts').onSnapshot(snap => {
             cloudData.accounts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             checkPersistedLogin();
-            if (currentUser && currentUser.isAdmin) renderAdminLists();
+            if (currentUser && (currentUser.isAdmin || currentUser.canEdit)) renderAdminLists();
         });
 
         db.collection('edp_keywords').onSnapshot(snap => {
             cloudData.keywords = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             loadFormInputs();
-            if (currentUser && currentUser.isAdmin) renderAdminLists();
+            if (currentUser && (currentUser.isAdmin || currentUser.canEdit)) renderAdminLists();
         });
 
         db.collection('edp_incidents').onSnapshot(snap => {
@@ -729,10 +729,18 @@
         document.getElementById('currentUserDisplay').innerText = `Eingeloggt: ${currentUser.user}`;
         document.getElementById('currentAreaLabel').innerText = currentUser.user;
 
-        if (currentUser.isAdmin) {
+        if (currentUser.isAdmin || currentUser.canEdit) {
             document.getElementById('adminBtn').style.display = 'inline-block';
         } else {
             document.getElementById('adminBtn').style.display = 'none';
+        }
+
+        if (currentUser.isAdmin) {
+            document.getElementById('modalHeaderTitle').innerText = "Administrator-Verwaltung (Stammdaten & Accounts)";
+            document.getElementById('accountManagementSection').style.display = 'block';
+        } else {
+            document.getElementById('modalHeaderTitle').innerText = "Alarmstichworte verwalten";
+            document.getElementById('accountManagementSection').style.display = 'none';
         }
 
         if (currentUser.canEdit === false && !currentUser.isAdmin) {
@@ -752,20 +760,21 @@
         setCrewPanelActive(false, null);
         setLogNoteActive(false, null);
         renderGlobalLogs();
-        if (currentUser.isAdmin) renderAdminLists();
+        if (currentUser.isAdmin || currentUser.canEdit) renderAdminLists();
     }
 
     function loadFormInputs() {
         let keySelect = document.getElementById('incType');
         keySelect.innerHTML = '';
-        cloudData.keywords.forEach(k => {
+        let filteredKeywords = cloudData.keywords.filter(k => k.createdBy === currentUser.user);
+        filteredKeywords.forEach(k => {
             keySelect.innerHTML += `<option value="${k.name}">${k.name}</option>`;
         });
     }
 
     function toggleAdminModal(show) {
         document.getElementById('adminModal').style.display = show ? 'flex' : 'none';
-        if (show) renderAdminLists();
+        if (show && (currentUser.isAdmin || currentUser.canEdit)) renderAdminLists();
     }
 
     function togglePasswordModal(show) {
@@ -819,35 +828,45 @@
     function renderAdminLists() {
         let keyDiv = document.getElementById('adminKeywordList');
         keyDiv.innerHTML = '';
-        cloudData.keywords.forEach((k) => {
-            keyDiv.innerHTML += `<div class="item-row"><span>${k.name}</span> <button class="secondary" style="width:auto; padding:2px 5px;" onclick="deleteKeyword('${k.id}')">Löschen</button></div>`;
-        });
+        let filteredKeywords = cloudData.keywords.filter(k => k.createdBy === currentUser.user);
 
-        let accDiv = document.getElementById('adminAccountList');
-        accDiv.innerHTML = '';
-        cloudData.accounts.forEach(a => {
-            let badgeAreaClass = a.isAdmin ? 'badge-admin' : 'badge-jf';
-            let areaLabel = a.isAdmin ? 'Administrator' : 'Benutzer';
-            accDiv.innerHTML += `
-                <div class="item-row">
-                    <span><strong>${a.user}</strong> <span class="badge ${badgeAreaClass}">${areaLabel}</span> (Schreiben: ${a.canEdit ? 'Ja' : 'Nein'})</span>
-                    <div style="display:flex; gap:4px;">
-                        <button class="secondary" style="width:auto; padding:2px 6px;" onclick="adminResetPassword('${a.id}', '${a.user}')">PW zurücksetzen</button>
-                        ${a.user !== 'adminedp' ? `<button class="secondary" style="width:auto; padding:2px 6px; background:#b71c1c;" onclick="adminDeleteAccount('${a.id}', '${a.user}')">Löschen</button>` : ''}
-                    </div>
-                </div>`;
-        });
+        if (filteredKeywords.length === 0) {
+            keyDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.75rem; text-align:center; padding:5px;">Keine eigenen Stichworte vorhanden.</div>`;
+        } else {
+            filteredKeywords.forEach((k) => {
+                keyDiv.innerHTML += `<div class="item-row"><span>${k.name}</span> <button class="secondary" style="width:auto; padding:2px 5px;" onclick="deleteKeyword('${k.id}')">Löschen</button></div>`;
+            });
+        }
+
+        if (currentUser.isAdmin) {
+            let accDiv = document.getElementById('adminAccountList');
+            accDiv.innerHTML = '';
+            cloudData.accounts.forEach(a => {
+                let badgeAreaClass = a.isAdmin ? 'badge-admin' : 'badge-jf';
+                let areaLabel = a.isAdmin ? 'Administrator' : 'Benutzer';
+                accDiv.innerHTML += `
+                    <div class="item-row">
+                        <span><strong>${a.user}</strong> <span class="badge ${badgeAreaClass}">${areaLabel}</span> (Schreiben: ${a.canEdit ? 'Ja' : 'Nein'})</span>
+                        <div style="display:flex; gap:4px;">
+                            <button class="secondary" style="width:auto; padding:2px 6px;" onclick="adminResetPassword('${a.id}', '${a.user}')">PW zurücksetzen</button>
+                            ${a.user !== 'adminedp' ? `<button class="secondary" style="width:auto; padding:2px 6px; background:#b71c1c;" onclick="adminDeleteAccount('${a.id}', '${a.user}')">Löschen</button>` : ''}
+                        </div>
+                    </div>`;
+            });
+        }
     }
 
     document.getElementById('addKeywordForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         let name = document.getElementById('newKeyName').value.trim();
-        await db.collection('edp_keywords').add({ name });
+        if (!name) return;
+        await db.collection('edp_keywords').add({ name, createdBy: currentUser.user });
         document.getElementById('newKeyName').value = '';
     });
 
     document.getElementById('addAccountForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (!currentUser.isAdmin) return;
         let user = document.getElementById('accUser').value.trim();
         let pass = document.getElementById('accPass').value.trim();
         let canEdit = document.getElementById('accCanEdit').value === 'true';
