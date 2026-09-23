@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EDP-Light // JF Einsatzleitung</title>
 
-    <!-- Firebase SDKs (Compat Versionen für direkte Browser-Nutzung ohne Node.js) -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
@@ -323,6 +323,10 @@
                 <label>Passwort</label>
                 <input type="password" id="loginPass" required placeholder="Passwort">
             </div>
+            <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                <input type="checkbox" id="stayLoggedIn" style="width: auto; cursor: pointer;">
+                <label for="stayLoggedIn" style="cursor: pointer; margin-bottom: 0; color: var(--text-color); font-size: 0.8rem;">Angemeldet bleiben</label>
+            </div>
             <button type="submit" style="margin-top: 10px;">Anmelden</button>
         </form>
         <p id="loginError" style="color: var(--accent-red); font-size: 0.75rem; margin-top: 10px; text-align: center;"></p>
@@ -606,6 +610,10 @@
 
         db.collection('edp_accounts').onSnapshot(snap => {
             cloudData.accounts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            // Prüfen, ob bereits ein persistenter Login vorliegt (nachdem Accounts geladen wurden)
+            checkPersistedLogin();
+
             if (currentUser && currentUser.isAdmin) renderAdminLists();
         });
 
@@ -651,15 +659,37 @@
 
     initFirebaseSync();
 
+    function checkPersistedLogin() {
+        if (currentUser) return; // Bereits eingeloggt
+
+        let savedUser = localStorage.getItem('edp_logged_user');
+        if (savedUser && cloudData.accounts.length > 0) {
+            let found = cloudData.accounts.find(acc => acc.user === savedUser);
+            if (found) {
+                currentUser = found;
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'grid';
+                initApp();
+            }
+        }
+    }
+
     document.getElementById('loginForm').addEventListener('submit', (e) => {
         e.preventDefault();
         let u = document.getElementById('loginUser').value.trim();
         let p = document.getElementById('loginPass').value.trim();
+        let stayLoggedIn = document.getElementById('stayLoggedIn').checked;
 
         let found = cloudData.accounts.find(acc => acc.user === u && acc.pass === p);
 
         if (found) {
             currentUser = found;
+            if (stayLoggedIn) {
+                localStorage.setItem('edp_logged_user', found.user);
+            } else {
+                localStorage.removeItem('edp_logged_user');
+            }
+
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appContainer').style.display = 'grid';
             initApp();
@@ -671,6 +701,8 @@
     function logout() {
         currentUser = null;
         selectedIncidentId = null;
+        localStorage.removeItem('edp_logged_user'); // Dauerhaften Login löschen
+
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('appContainer').style.display = 'none';
         document.getElementById('loginForm').reset();
@@ -860,7 +892,6 @@
         let tbody = document.getElementById('incidentTableBody');
         tbody.innerHTML = '';
 
-        // Nur eigene Einsätze anzeigen, es sei denn man ist Admin
         let filtered = currentUser && currentUser.isAdmin
             ? cloudData.incidents
             : cloudData.incidents.filter(i => i.createdBy === currentUser.user);
