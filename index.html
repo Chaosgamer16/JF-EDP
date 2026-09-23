@@ -316,6 +316,70 @@
             border-bottom: 1px solid #333;
             padding-bottom: 4px;
         }
+
+        /* MOBILE & TABLET ANPASSUNGEN (EXAKT DESIGN-GETREU) */
+        @media (max-width: 1024px) {
+            body {
+                overflow: auto;
+                height: auto;
+            }
+
+            .app-container {
+                display: flex !important;
+                flex-direction: column !important;
+                height: auto !important;
+                overflow: visible !important;
+                padding: 5px;
+                gap: 15px;
+            }
+
+            .app-container > div[style*="flex-direction: column"],
+            .incident-list-panel,
+            .right-column-panel,
+            panel {
+                width: 100% !important;
+                max-width: 100% !important;
+                height: auto !important;
+                min-height: 250px;
+            }
+
+            header {
+                flex-direction: column;
+                gap: 8px;
+                align-items: stretch;
+            }
+
+            .header-right {
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+
+            .panel-body table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-box {
+                width: 90% !important;
+                padding: 15px;
+            }
+            
+            .logo-area h1 {
+                font-size: 0.9rem;
+            }
+
+            button {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+
+            input, select, textarea {
+                font-size: 16px !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -430,7 +494,7 @@
 <!-- HAUPTANWENDUNG -->
 <div class="app-container" id="appContainer">
 
-<!-- SPALTE 1 (Links) -->
+    <!-- SPALTE 1 (Links) -->
     <div style="display: flex; flex-direction: column; gap: 10px; width: 320px; height: 100%;">
         <panel style="flex: 1.2; min-height: 0;">
             <div class="panel-header">Vorfall erfassen</div>
@@ -456,7 +520,6 @@
                 </form>
             </div>
         </panel>
-    </div>
 
         <panel style="flex: 1; min-height: 0;">
             <div class="panel-header">Anwesendes Personal</div>
