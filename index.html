@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EDP-Light // JF Einsatzleitung</title>
-    
+
     <!-- Firebase SDKs (Compat Versionen für direkte Browser-Nutzung ohne Node.js) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -18,6 +18,8 @@
             --accent-green: #388e3c;
             --accent-blue: #1976d2;
             --accent-purple: #7b1fa2;
+            --accent-teal: #00897b;
+            --accent-brown: #6d4c41;
             --text-color: #e0e0e0;
             --text-muted: #9e9e9e;
             --border-color: #333;
@@ -246,6 +248,8 @@
         .badge-fertig { background: var(--accent-green); color: white; }
         .badge-jf { background: var(--accent-blue); color: white; }
         .badge-betreuer { background: var(--accent-purple); color: white; }
+        .badge-gast { background: var(--accent-teal); color: white; }
+        .badge-helfer { background: var(--accent-brown); color: white; }
         .badge-admin { background: var(--accent-red); color: white; }
 
         .item-row {
@@ -306,893 +310,913 @@
 </head>
 <body>
 
-    <!-- LOGIN BILDSCHIRM -->
-    <div id="loginScreen">
-        <div class="login-box">
-            <h2>EDP-Light // Login</h2>
-            <form id="loginForm">
-                <div class="form-group">
-                    <label>Benutzername</label>
-                    <input type="text" id="loginUser" required placeholder="z.B. adminedp">
-                </div>
-                <div class="form-group">
-                    <label>Passwort</label>
-                    <input type="password" id="loginPass" required placeholder="Passwort">
-                </div>
-                <button type="submit" style="margin-top: 10px;">Anmelden</button>
-            </form>
-            <p id="loginError" style="color: var(--accent-red); font-size: 0.75rem; margin-top: 10px; text-align: center;"></p>
-        </div>
+<!-- LOGIN BILDSCHIRM -->
+<div id="loginScreen">
+    <div class="login-box">
+        <h2>EDP-Light // Login</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Benutzername</label>
+                <input type="text" id="loginUser" required placeholder="z.B. adminedp">
+            </div>
+            <div class="form-group">
+                <label>Passwort</label>
+                <input type="password" id="loginPass" required placeholder="Passwort">
+            </div>
+            <button type="submit" style="margin-top: 10px;">Anmelden</button>
+        </form>
+        <p id="loginError" style="color: var(--accent-red); font-size: 0.75rem; margin-top: 10px; text-align: center;"></p>
     </div>
+</div>
 
-    <!-- ADMIN PANEL MODAL -->
-    <div id="adminModal" class="custom-modal">
-        <div class="modal-content">
-            <div class="panel-header">
-                <span>Administrator-Verwaltung (Stammdaten & Accounts)</span>
-                <button class="secondary" style="width: auto; padding: 2px 6px;" onclick="toggleAdminModal(false)">Schließen</button>
-            </div>
-            <div class="modal-body">
-                <div class="admin-section">
-                    <h3>Einsatz-Stichworte verwalten</h3>
-                    <form id="addKeywordForm" style="display: flex; gap: 8px; margin-bottom: 8px;">
-                        <input type="text" id="newKeyName" placeholder="Stichwort" required style="flex: 2;">
-                        <button type="submit" style="flex: 1;">Hinzufügen</button>
-                    </form>
-                    <div id="adminKeywordList" style="max-height: 100px; overflow-y: auto;"></div>
-                </div>
-
-                <div class="admin-section">
-                    <h3>Benutzer-Accounts verwalten & anlegen</h3>
-                    <form id="addAccountForm" style="margin-bottom: 12px;">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 6px;">
-                            <input type="text" id="accUser" placeholder="Benutzername" required>
-                            <input type="password" id="accPass" placeholder="Passwort" required>
-                            <select id="accCanEdit">
-                                <option value="true">Schreibrecht: Ja</option>
-                                <option value="false">Schreibrecht: Nein</option>
-                            </select>
-                        </div>
-                        <button type="submit">Account erstellen</button>
-                    </form>
-                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Vorhandene Accounts:</div>
-                    <div id="adminAccountList" style="max-height: 140px; overflow-y: auto; background: #1a1a1a; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px;"></div>
-                </div>
-            </div>
+<!-- ADMIN PANEL MODAL -->
+<div id="adminModal" class="custom-modal">
+    <div class="modal-content">
+        <div class="panel-header">
+            <span>Administrator-Verwaltung (Stammdaten & Accounts)</span>
+            <button class="secondary" style="width: auto; padding: 2px 6px;" onclick="toggleAdminModal(false)">Schließen</button>
         </div>
-    </div>
-
-    <!-- PASSWORT ÄNDERN MODAL -->
-    <div id="changePasswordModal" class="custom-modal">
-        <div class="modal-content" style="width: 400px;">
-            <div class="panel-header">
-                <span>Eigenes Passwort ändern</span>
-                <button class="secondary" style="width: auto; padding: 2px 6px;" onclick="togglePasswordModal(false)">Schließen</button>
-            </div>
-            <div class="modal-body">
-                <form id="changePasswordForm">
-                    <div class="form-group">
-                        <label>Altes Passwort</label>
-                        <input type="password" id="oldPassInput" required placeholder="Bisheriges Passwort">
-                    </div>
-                    <div class="form-group">
-                        <label>Neues Passwort</label>
-                        <input type="password" id="newPassInput" required placeholder="Neues Passwort">
-                    </div>
-                    <div class="form-group">
-                        <label>Neues Passwort bestätigen</label>
-                        <input type="password" id="newPassConfirmInput" required placeholder="Neues Passwort wiederholen">
-                    </div>
-                    <button type="submit" style="margin-top: 10px;">Passwort speichern</button>
+        <div class="modal-body">
+            <div class="admin-section">
+                <h3>Einsatz-Stichworte verwalten</h3>
+                <form id="addKeywordForm" style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <input type="text" id="newKeyName" placeholder="Stichwort" required style="flex: 2;">
+                    <button type="submit" style="flex: 1;">Hinzufügen</button>
                 </form>
-                <p id="changePassError" style="color: var(--accent-red); font-size: 0.75rem; margin-top: 8px; text-align: center;"></p>
+                <div id="adminKeywordList" style="max-height: 100px; overflow-y: auto;"></div>
+            </div>
+
+            <div class="admin-section">
+                <h3>Benutzer-Accounts verwalten & anlegen</h3>
+                <form id="addAccountForm" style="margin-bottom: 12px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+                        <input type="text" id="accUser" placeholder="Benutzername" required>
+                        <input type="password" id="accPass" placeholder="Passwort" required>
+                        <select id="accCanEdit">
+                            <option value="true">Schreibrecht: Ja</option>
+                            <option value="false">Schreibrecht: Nein</option>
+                        </select>
+                    </div>
+                    <button type="submit">Account erstellen</button>
+                </form>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Vorhandene Accounts:</div>
+                <div id="adminAccountList" style="max-height: 140px; overflow-y: auto; background: #1a1a1a; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px;"></div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- HAUPT-HEADER -->
-    <header>
-        <div class="logo-area">
-            <h1>EDP-Light // <span id="currentAreaLabel">Jugendfeuerwehr</span></h1>
+<!-- PASSWORT ÄNDERN MODAL -->
+<div id="changePasswordModal" class="custom-modal">
+    <div class="modal-content" style="width: 400px;">
+        <div class="panel-header">
+            <span>Eigenes Passwort ändern</span>
+            <button class="secondary" style="width: auto; padding: 2px 6px;" onclick="togglePasswordModal(false)">Schließen</button>
         </div>
-        <div class="header-right">
-            <span id="currentUserDisplay" style="font-size: 0.85rem; color: var(--text-muted);">Eingeloggt als: -</span>
-            <button class="secondary" style="width: auto; padding: 4px 8px; font-size: 0.75rem;" onclick="togglePasswordModal(true)">Passwort ändern</button>
-            <button id="adminBtn" class="blue" style="width: auto; padding: 4px 10px; display: none;" onclick="toggleAdminModal(true)">Admin-Menü</button>
-            <div class="clock" id="liveClock">00:00:00</div>
-            <button class="secondary" style="width: auto; padding: 4px 10px;" onclick="logout()">Abmelden</button>
-        </div>
-    </header>
-
-    <!-- HAUPTANWENDUNG -->
-    <div class="app-container" id="appContainer">
-
-        <!-- SPALTE 1 (Links) -->
-        <div style="display: flex; flex-direction: column; gap: 10px; width: 320px; height: 100%;">
-            <panel style="flex: 1.2; min-height: 0;">
-                <div class="panel-header">Vorfall erfassen</div>
-                <div class="panel-body">
-                    <form id="incidentForm">
-                        <div class="form-group">
-                            <label>Stichwort</label>
-                            <select id="incType" required></select>
-                        </div>
-                        <div class="form-group">
-                            <label>Ort / Einsatzstelle</label>
-                            <input type="text" id="incLocationText" placeholder="Ort / Adresse eingeben" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Betroffene Person / Objekt</label>
-                            <input type="text" id="incPatient" placeholder="Name / Objekt">
-                        </div>
-                        <div class="form-group">
-                            <label>Kurzbeschreibung / Lagemeldung</label>
-                            <textarea id="incDescription" rows="2" placeholder="Kurze Beschreibung des Einsatzes..."></textarea>
-                        </div>
-                        <button type="submit" id="btnCreateInc">Einsatz anlegen</button>
-                    </form>
+        <div class="modal-body">
+            <form id="changePasswordForm">
+                <div class="form-group">
+                    <label>Altes Passwort</label>
+                    <input type="password" id="oldPassInput" required placeholder="Bisheriges Passwort">
                 </div>
-            </panel>
-
-            <panel style="flex: 1; min-height: 0;">
-                <div class="panel-header">Anwesendes Personal</div>
-                <div class="panel-body" style="display: flex; flex-direction: column;">
-                    <form id="addPersonForm" style="display: flex; gap: 5px; margin-bottom: 8px; flex-shrink: 0;">
-                        <input type="text" id="personName" placeholder="Name Einsatzkraft" required style="flex: 2;">
-                        <select id="personRole" style="flex: 1;">
-                            <option value="JF">JF</option>
-                            <option value="Betreuer">Betreuer</option>
-                        </select>
-                        <button type="submit" style="width: auto; padding: 4px 8px;">+</button>
-                    </form>
-                    <div id="personList" style="flex: 1; overflow-y: auto; min-height: 0;"></div>
+                <div class="form-group">
+                    <label>Neues Passwort</label>
+                    <input type="password" id="newPassInput" required placeholder="Neues Passwort">
                 </div>
-            </panel>
+                <div class="form-group">
+                    <label>Neues Passwort bestätigen</label>
+                    <input type="password" id="newPassConfirmInput" required placeholder="Neues Passwort wiederholen">
+                </div>
+                <button type="submit" style="margin-top: 10px;">Passwort speichern</button>
+            </form>
+            <p id="changePassError" style="color: var(--accent-red); font-size: 0.75rem; margin-top: 8px; text-align: center;"></p>
         </div>
+    </div>
+</div>
 
-        <!-- SPALTE 2: EINSATZLISTE (Mitte) -->
-        <panel class="incident-list-panel">
-            <div class="panel-header">
-                <span>Einsatz-Übersicht (Klicken zum Auswählen)</span>
-                <span id="permissionHint" style="font-size: 0.75rem; color: var(--accent-orange);"></span>
-            </div>
-            <div class="panel-body" style="padding: 0;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Zeit</th>
-                            <th>Stichwort</th>
-                            <th>Ort</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="incidentTableBody"></tbody>
-                </table>
+<!-- HAUPT-HEADER -->
+<header>
+    <div class="logo-area">
+        <h1>EDP-Light // <span id="currentAreaLabel">Einsatzleitung</span></h1>
+    </div>
+    <div class="header-right">
+        <span id="currentUserDisplay" style="font-size: 0.85rem; color: var(--text-muted);">Eingeloggt als: -</span>
+        <button class="secondary" style="width: auto; padding: 4px 8px; font-size: 0.75rem;" onclick="togglePasswordModal(true)">Passwort ändern</button>
+        <button id="adminBtn" class="blue" style="width: auto; padding: 4px 10px; display: none;" onclick="toggleAdminModal(true)">Admin-Menü</button>
+        <div class="clock" id="liveClock">00:00:00</div>
+        <button class="secondary" style="width: auto; padding: 4px 10px;" onclick="logout()">Abmelden</button>
+    </div>
+</header>
+
+<!-- HAUPTANWENDUNG -->
+<div class="app-container" id="appContainer">
+
+    <!-- SPALTE 1 (Links) -->
+    <div style="display: flex; flex-direction: column; gap: 10px; width: 320px; height: 100%;">
+        <panel style="flex: 1.2; min-height: 0;">
+            <div class="panel-header">Vorfall erfassen</div>
+            <div class="panel-body">
+                <form id="incidentForm">
+                    <div class="form-group">
+                        <label>Stichwort</label>
+                        <select id="incType" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ort / Einsatzstelle</label>
+                        <input type="text" id="incLocationText" placeholder="Ort / Adresse eingeben" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Betroffene Person / Objekt</label>
+                        <input type="text" id="incPatient" placeholder="Name / Objekt">
+                    </div>
+                    <div class="form-group">
+                        <label>Kurzbeschreibung / Lagemeldung</label>
+                        <textarea id="incDescription" rows="2" placeholder="Kurze Beschreibung des Einsatzes..."></textarea>
+                    </div>
+                    <button type="submit" id="btnCreateInc">Einsatz anlegen</button>
+                </form>
             </div>
         </panel>
 
-        <!-- SPALTE 3 (Rechts) -->
-        <div style="display: flex; flex-direction: column; gap: 10px; width: 380px; height: 100%;">
-            <panel class="right-column-panel">
-                <div class="panel-header">Einsatz-Details</div>
-                <div class="panel-body" id="detailPanel">
-                    <p style="color: var(--text-muted); text-align: center; margin-top: 15px;">Wähle einen Einsatz aus.</p>
-                </div>
-            </panel>
-
-            <!-- FAHRZEUGE HINZUFÜGEN -->
-            <panel id="jfVehiclePanel" class="right-column-panel">
-                <div class="panel-header">Fahrzeuge verwalten</div>
-                <div class="panel-body" style="display: flex; flex-direction: column;">
-                    <form id="addVehicleForm" style="display: flex; gap: 5px; margin-bottom: 6px; flex-shrink: 0;">
-                        <input type="text" id="vehType" placeholder="Typ (z.B. LF 10)" required style="flex: 1;">
-                        <input type="text" id="vehFunk" placeholder="Funkrufname" required style="flex: 1;">
-                        <button type="submit" style="width: auto; padding: 4px 8px;">Neu</button>
-                    </form>
-                    <div id="vehicleList" style="flex: 1; overflow-y: auto; min-height: 0;"></div>
-                </div>
-            </panel>
-
-            <!-- PERSONAL-ZUTEILUNG -->
-            <panel id="jfCrewPanel" class="right-column-panel">
-                <div class="panel-header">
-                    <span>Personal-Zuteilung</span>
-                    <span id="activeIncidentBadge" style="font-size: 0.7rem; background: #444; padding: 2px 5px; border-radius: 3px;">Kein Einsatz aktiv</span>
-                </div>
-                <div class="panel-body" style="display: flex; flex-direction: column;">
-                    <form id="assignCrewForm" style="margin-bottom: 6px; flex-shrink: 0;">
-                        <div style="display: flex; gap: 5px; margin-bottom: 4px;">
-                            <select id="assignVehicle" required style="flex: 1;" disabled></select>
-                            <select id="assignPerson" required style="flex: 1;" disabled></select>
-                        </div>
-                        <div style="display: flex; gap: 5px;">
-                            <select id="assignPosition" required style="flex: 2;" disabled>
-                                <option value="">-- Position wählen --</option>
-                                <option value="Maschinist">Maschinist</option>
-                                <option value="Gruppenführer">Gruppenführer</option>
-                                <option value="Zugführer">Zugführer</option>
-                                <option value="Einsatzleiter">Einsatzleiter</option>
-                                <option value="Melder">Melder</option>
-                                <option value="Truppmann">Truppmann</option>
-                                <option value="Truppführer">Truppführer</option>
-                                <option value="Angriffstruppmann">Angriffstruppmann</option>
-                                <option value="Angriffstruppführer">Angriffstruppführer</option>
-                                <option value="Wassertruppmann">Wassertruppmann</option>
-                                <option value="Wassertruppführer">Wassertruppführer</option>
-                                <option value="Schlauchtruppmann">Schlauchtruppmann</option>
-                                <option value="Schlauchtruppführer">Schlauchtruppführer</option>
-                                <option value="IUK-Einheit">IUK-Einheit</option>
-                                <option value="Führungsassistent">Führungsassistent</option>
-                            </select>
-                            <button type="submit" id="btnAssign" style="width: auto; padding: 4px 8px; flex: 1;" disabled>Zuteilen</button>
-                        </div>
-                    </form>
-                    <div id="assignedCrewList" style="flex: 1; overflow-y: auto; min-height: 0;"></div>
-                </div>
-            </panel>
-
-            <!-- TAGEBUCH -->
-            <panel class="right-column-panel" style="display: flex; flex-direction: column;">
-                <div class="panel-header">Tagebuch</div>
-                <div class="panel-body" id="logBook" style="flex: 1; min-height: 0;">
-                    <div class="log-entry"><span class="log-time">[System]</span> Bereit.</div>
-                </div>
-                <div style="padding: 6px; background: #222; border-top: 1px solid var(--border-color); flex-shrink: 0;">
-                    <form id="addLogNoteForm" style="display: flex; gap: 5px;">
-                        <input type="text" id="logNoteInput" placeholder="Info zu ausgewähltem Einsatz eintragen..." disabled style="flex: 1;">
-                        <button type="submit" id="btnLogNote" disabled style="width: auto; padding: 4px 8px;">Eintragen</button>
-                    </form>
-                </div>
-            </panel>
-        </div>
-
+        <panel style="flex: 1; min-height: 0;">
+            <div class="panel-header">Anwesendes Personal</div>
+            <div class="panel-body" style="display: flex; flex-direction: column;">
+                <form id="addPersonForm" style="display: flex; gap: 5px; margin-bottom: 8px; flex-shrink: 0;">
+                    <input type="text" id="personName" placeholder="Name Einsatzkraft" required style="flex: 2;">
+                    <select id="personRole" style="flex: 1;">
+                        <option value="JF">JF</option>
+                        <option value="Betreuer">Betreuer</option>
+                        <option value="Gast">Gast</option>
+                        <option value="Helfer">Helfer</option>
+                    </select>
+                    <button type="submit" style="width: auto; padding: 4px 8px;">+</button>
+                </form>
+                <div id="personList" style="flex: 1; overflow-y: auto; min-height: 0;"></div>
+            </div>
+        </panel>
     </div>
 
-    <!-- JAVASCRIPT LOGIK MIT FIREBASE FIRESTORE -->
-    <script>
-        // Deine Firebase Konfiguration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBhDbmDoukjE-gAcHqJu6Gd7d3SySRY3YQ",
-            authDomain: "jf-edp.firebaseapp.com",
-            projectId: "jf-edp",
-            storageBucket: "jf-edp.firebasestorage.app",
-            messagingSenderId: "245733899449",
-            appId: "1:245733899449:web:88883f5707642fb08aef68",
-            measurementId: "G-61N3B30TL2"
-        };
+    <!-- SPALTE 2: EINSATZLISTE (Mitte) -->
+    <panel class="incident-list-panel">
+        <div class="panel-header">
+            <span>Einsatz-Übersicht (Klicken zum Auswählen)</span>
+            <span id="permissionHint" style="font-size: 0.75rem; color: var(--accent-orange);"></span>
+        </div>
+        <div class="panel-body" style="padding: 0;">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Zeit</th>
+                    <th>Stichwort</th>
+                    <th>Ort</th>
+                    <th>Status</th>
+                </tr>
+                </thead>
+                <tbody id="incidentTableBody"></tbody>
+            </table>
+        </div>
+    </panel>
 
-        // Firebase initialisieren
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+    <!-- SPALTE 3 (Rechts) -->
+    <div style="display: flex; flex-direction: column; gap: 10px; width: 380px; height: 100%;">
+        <panel class="right-column-panel">
+            <div class="panel-header">Einsatz-Details</div>
+            <div class="panel-body" id="detailPanel">
+                <p style="color: var(--text-muted); text-align: center; margin-top: 15px;">Wähle einen Einsatz aus.</p>
+            </div>
+        </panel>
 
-        let currentUser = null;
-        let selectedIncidentId = null;
+        <!-- FAHRZEUGE HINZUFÜGEN -->
+        <panel id="jfVehiclePanel" class="right-column-panel">
+            <div class="panel-header">Fahrzeuge verwalten</div>
+            <div class="panel-body" style="display: flex; flex-direction: column;">
+                <form id="addVehicleForm" style="display: flex; gap: 5px; margin-bottom: 6px; flex-shrink: 0;">
+                    <input type="text" id="vehType" placeholder="Typ (z.B. LF 10)" required style="flex: 1;">
+                    <input type="text" id="vehFunk" placeholder="Funkrufname" required style="flex: 1;">
+                    <button type="submit" style="width: auto; padding: 4px 8px;">Neu</button>
+                </form>
+                <div id="vehicleList" style="flex: 1; overflow-y: auto; min-height: 0;"></div>
+            </div>
+        </panel>
 
-        // Speicher-Caches (werden live mit Firebase synchronisiert)
-        let cloudData = {
-            accounts: [],
-            keywords: [],
-            incidents: [],
-            persons: [],
-            vehicles: [],
-            assignments: [],
-            logs: []
-        };
+        <!-- PERSONAL-ZUTEILUNG -->
+        <panel id="jfCrewPanel" class="right-column-panel">
+            <div class="panel-header">
+                <span>Personal-Zuteilung</span>
+                <span id="activeIncidentBadge" style="font-size: 0.7rem; background: #444; padding: 2px 5px; border-radius: 3px;">Kein Einsatz aktiv</span>
+            </div>
+            <div class="panel-body" style="display: flex; flex-direction: column;">
+                <form id="assignCrewForm" style="margin-bottom: 6px; flex-shrink: 0;">
+                    <div style="display: flex; gap: 5px; margin-bottom: 4px;">
+                        <select id="assignVehicle" required style="flex: 1;" disabled></select>
+                        <select id="assignPerson" required style="flex: 1;" disabled></select>
+                    </div>
+                    <div style="display: flex; gap: 5px;">
+                        <select id="assignPosition" required style="flex: 2;" disabled>
+                            <option value="">-- Position wählen --</option>
+                            <option value="Maschinist">Maschinist</option>
+                            <option value="Gruppenführer">Gruppenführer</option>
+                            <option value="Zugführer">Zugführer</option>
+                            <option value="Einsatzleiter">Einsatzleiter</option>
+                            <option value="Melder">Melder</option>
+                            <option value="Truppmann">Truppmann</option>
+                            <option value="Truppführer">Truppführer</option>
+                            <option value="Angriffstruppmann">Angriffstruppmann</option>
+                            <option value="Angriffstruppführer">Angriffstruppführer</option>
+                            <option value="Wassertruppmann">Wassertruppmann</option>
+                            <option value="Wassertruppführer">Wassertruppführer</option>
+                            <option value="Schlauchtruppmann">Schlauchtruppmann</option>
+                            <option value="Schlauchtruppführer">Schlauchtruppführer</option>
+                            <option value="IUK-Einheit">IUK-Einheit</option>
+                            <option value="Führungsassistent">Führungsassistent</option>
+                        </select>
+                        <button type="submit" id="btnAssign" style="width: auto; padding: 4px 8px; flex: 1;" disabled>Zuteilen</button>
+                    </div>
+                </form>
+                <div id="assignedCrewList" style="flex: 1; overflow-y: auto; min-height: 0;"></div>
+            </div>
+        </panel>
 
-        // Live Uhrzeit
-        setInterval(() => {
-            document.getElementById('liveClock').innerText = new Date().toTimeString().split(' ')[0];
-        }, 1000);
+        <!-- TAGEBUCH -->
+        <panel class="right-column-panel" style="display: flex; flex-direction: column;">
+            <div class="panel-header">Tagebuch</div>
+            <div class="panel-body" id="logBook" style="flex: 1; min-height: 0;">
+                <div class="log-entry"><span class="log-time">[System]</span> Bereit.</div>
+            </div>
+            <div style="padding: 6px; background: #222; border-top: 1px solid var(--border-color); flex-shrink: 0;">
+                <form id="addLogNoteForm" style="display: flex; gap: 5px;">
+                    <input type="text" id="logNoteInput" placeholder="Info zu ausgewähltem Einsatz eintragen..." disabled style="flex: 1;">
+                    <button type="submit" id="btnLogNote" disabled style="width: auto; padding: 4px 8px;">Eintragen</button>
+                </form>
+            </div>
+        </panel>
+    </div>
 
-        // Firestore Realtime Listeners einrichten beim Laden
-        async function initFirebaseSync() {
-            // Initialer Check ob Standard-Admin existiert, falls Datenbank leer ist
-            const accSnap = await db.collection('edp_accounts').get();
-            if (accSnap.empty) {
-                await db.collection('edp_accounts').doc('adminedp').set({
-                    user: 'adminedp',
-                    pass: 'mariie.192',
-                    isAdmin: true,
-                    canEdit: true
-                });
-            }
+</div>
 
-            const keySnap = await db.collection('edp_keywords').get();
-            if (keySnap.empty) {
-                await db.collection('edp_keywords').add({ name: 'Kleinbrand (Übung)' });
-                await db.collection('edp_keywords').add({ name: 'Technische Hilfeleistung' });
-            }
+<!-- JAVASCRIPT LOGIK MIT FIREBASE FIRESTORE -->
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyBhDbmDoukjE-gAcHqJu6Gd7d3SySRY3YQ",
+        authDomain: "jf-edp.firebaseapp.com",
+        projectId: "jf-edp",
+        storageBucket: "jf-edp.firebasestorage.app",
+        messagingSenderId: "245733899449",
+        appId: "1:245733899449:web:88883f5707642fb08aef68",
+        measurementId: "G-61N3B30TL2"
+    };
 
-            // Live-Listener für alle Sammlungen
-            db.collection('edp_accounts').onSnapshot(snap => {
-                cloudData.accounts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                if (currentUser && currentUser.isAdmin) renderAdminLists();
-            });
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-            db.collection('edp_keywords').onSnapshot(snap => {
-                cloudData.keywords = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                loadFormInputs();
-                if (currentUser && currentUser.isAdmin) renderAdminLists();
-            });
+    let currentUser = null;
+    let selectedIncidentId = null;
 
-            db.collection('edp_incidents').onSnapshot(snap => {
-                cloudData.incidents = snap.docs.map(doc => ({ ...doc.data() }));
-                // Sortieren nach ID absteigend (neueste zuerst)
-                cloudData.incidents.sort((a, b) => b.id - a.id);
-                renderTable();
-            });
+    let cloudData = {
+        accounts: [],
+        keywords: [],
+        incidents: [],
+        persons: [],
+        vehicles: [],
+        assignments: [],
+        logs: []
+    };
 
-            db.collection('edp_persons').onSnapshot(snap => {
-                cloudData.persons = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderPersons();
-                updateAssignDropdowns();
-            });
+    setInterval(() => {
+        document.getElementById('liveClock').innerText = new Date().toTimeString().split(' ')[0];
+    }, 1000);
 
-            db.collection('edp_vehicles').onSnapshot(snap => {
-                cloudData.vehicles = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderVehicles();
-                updateAssignDropdowns();
-            });
-
-            db.collection('edp_assignments').onSnapshot(snap => {
-                cloudData.assignments = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                renderAssignments();
-            });
-
-            db.collection('edp_logs').onSnapshot(snap => {
-                cloudData.logs = snap.docs.map(doc => ({ ...doc.data() }));
-                // Sortieren nach Zeit
-                cloudData.logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                if (selectedIncidentId) {
-                    renderLogsForIncident(selectedIncidentId);
-                } else {
-                    renderGlobalLogs();
-                }
+    async function initFirebaseSync() {
+        const accSnap = await db.collection('edp_accounts').get();
+        if (accSnap.empty) {
+            await db.collection('edp_accounts').doc('adminedp').set({
+                user: 'adminedp',
+                pass: 'mariie.192',
+                isAdmin: true,
+                canEdit: true
             });
         }
 
-        initFirebaseSync();
+        const keySnap = await db.collection('edp_keywords').get();
+        if (keySnap.empty) {
+            await db.collection('edp_keywords').add({ name: 'Kleinbrand (Übung)' });
+            await db.collection('edp_keywords').add({ name: 'Technische Hilfeleistung' });
+        }
 
-        // Login Logik
-        document.getElementById('loginForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            let u = document.getElementById('loginUser').value.trim();
-            let p = document.getElementById('loginPass').value.trim();
-            
-            let found = cloudData.accounts.find(acc => acc.user === u && acc.pass === p);
-
-            if (found) {
-                currentUser = found;
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('appContainer').style.display = 'grid';
-                initApp();
-            } else {
-                document.getElementById('loginError').innerText = "Falscher Benutzername oder Passwort!";
-            }
+        db.collection('edp_accounts').onSnapshot(snap => {
+            cloudData.accounts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            if (currentUser && currentUser.isAdmin) renderAdminLists();
         });
 
-        function logout() {
-            currentUser = null;
-            selectedIncidentId = null;
-            document.getElementById('loginScreen').style.display = 'flex';
-            document.getElementById('appContainer').style.display = 'none';
-            document.getElementById('loginForm').reset();
-            document.getElementById('loginError').innerText = '';
-            setCrewPanelActive(false, null);
-            setLogNoteActive(false, null);
-        }
-
-        function initApp() {
-            let roleText = currentUser.isAdmin ? 'Administrator' : 'Jugendfeuerwehr';
-            document.getElementById('currentUserDisplay').innerText = `Eingeloggt: ${currentUser.user} (${roleText})`;
-            document.getElementById('currentAreaLabel').innerText = roleText;
-            
-            if (currentUser.isAdmin) {
-                document.getElementById('adminBtn').style.display = 'inline-block';
-            } else {
-                document.getElementById('adminBtn').style.display = 'none';
-            }
-
-            if (currentUser.canEdit === false && !currentUser.isAdmin) {
-                document.getElementById('btnCreateInc').disabled = true;
-                document.getElementById('btnCreateInc').innerText = "Keine Schreibrechte";
-                document.getElementById('permissionHint').innerText = "Nur Lese-Modus";
-            } else {
-                document.getElementById('btnCreateInc').disabled = false;
-                document.getElementById('btnCreateInc').innerText = "Einsatz anlegen";
-                document.getElementById('permissionHint').innerText = "";
-            }
-
+        db.collection('edp_keywords').onSnapshot(snap => {
+            cloudData.keywords = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             loadFormInputs();
+            if (currentUser && currentUser.isAdmin) renderAdminLists();
+        });
+
+        db.collection('edp_incidents').onSnapshot(snap => {
+            cloudData.incidents = snap.docs.map(doc => ({ ...doc.data() }));
+            cloudData.incidents.sort((a, b) => b.id - a.id);
             renderTable();
+        });
+
+        db.collection('edp_persons').onSnapshot(snap => {
+            cloudData.persons = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderPersons();
+            updateAssignDropdowns();
+        });
+
+        db.collection('edp_vehicles').onSnapshot(snap => {
+            cloudData.vehicles = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderVehicles();
+            updateAssignDropdowns();
+        });
+
+        db.collection('edp_assignments').onSnapshot(snap => {
+            cloudData.assignments = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderAssignments();
+        });
+
+        db.collection('edp_logs').onSnapshot(snap => {
+            cloudData.logs = snap.docs.map(doc => ({ ...doc.data() }));
+            cloudData.logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            if (selectedIncidentId) {
+                renderLogsForIncident(selectedIncidentId);
+            } else {
+                renderGlobalLogs();
+            }
+        });
+    }
+
+    initFirebaseSync();
+
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        let u = document.getElementById('loginUser').value.trim();
+        let p = document.getElementById('loginPass').value.trim();
+
+        let found = cloudData.accounts.find(acc => acc.user === u && acc.pass === p);
+
+        if (found) {
+            currentUser = found;
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'grid';
+            initApp();
+        } else {
+            document.getElementById('loginError').innerText = "Falscher Benutzername oder Passwort!";
+        }
+    });
+
+    function logout() {
+        currentUser = null;
+        selectedIncidentId = null;
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('appContainer').style.display = 'none';
+        document.getElementById('loginForm').reset();
+        document.getElementById('loginError').innerText = '';
+        setCrewPanelActive(false, null);
+        setLogNoteActive(false, null);
+    }
+
+    function initApp() {
+        let roleText = currentUser.isAdmin ? 'Administrator' : `Account: ${currentUser.user}`;
+        document.getElementById('currentUserDisplay').innerText = `Eingeloggt: ${currentUser.user}`;
+        document.getElementById('currentAreaLabel').innerText = currentUser.user;
+
+        if (currentUser.isAdmin) {
+            document.getElementById('adminBtn').style.display = 'inline-block';
+        } else {
+            document.getElementById('adminBtn').style.display = 'none';
+        }
+
+        if (currentUser.canEdit === false && !currentUser.isAdmin) {
+            document.getElementById('btnCreateInc').disabled = true;
+            document.getElementById('btnCreateInc').innerText = "Keine Schreibrechte";
+            document.getElementById('permissionHint').innerText = "Nur Lese-Modus";
+        } else {
+            document.getElementById('btnCreateInc').disabled = false;
+            document.getElementById('btnCreateInc').innerText = "Einsatz anlegen";
+            document.getElementById('permissionHint').innerText = "";
+        }
+
+        loadFormInputs();
+        renderTable();
+        renderPersons();
+        renderVehicles();
+        setCrewPanelActive(false, null);
+        setLogNoteActive(false, null);
+        renderGlobalLogs();
+        if (currentUser.isAdmin) renderAdminLists();
+    }
+
+    function loadFormInputs() {
+        let keySelect = document.getElementById('incType');
+        keySelect.innerHTML = '';
+        cloudData.keywords.forEach(k => {
+            keySelect.innerHTML += `<option value="${k.name}">${k.name}</option>`;
+        });
+    }
+
+    function toggleAdminModal(show) {
+        document.getElementById('adminModal').style.display = show ? 'flex' : 'none';
+        if (show) renderAdminLists();
+    }
+
+    function togglePasswordModal(show) {
+        document.getElementById('changePasswordModal').style.display = show ? 'flex' : 'none';
+        document.getElementById('changePasswordForm').reset();
+        document.getElementById('changePassError').innerText = '';
+    }
+
+    document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        let oldP = document.getElementById('oldPassInput').value;
+        let newP = document.getElementById('newPassInput').value;
+        let confP = document.getElementById('newPassConfirmInput').value;
+
+        if (newP !== confP) {
+            document.getElementById('changePassError').innerText = "Das neue Passwort stimmt nicht mit der Bestätigung überein!";
+            return;
+        }
+
+        let accDoc = cloudData.accounts.find(a => a.user === currentUser.user);
+        if (!accDoc || accDoc.pass !== oldP) {
+            document.getElementById('changePassError').innerText = "Das alte Passwort ist falsch!";
+            return;
+        }
+
+        await db.collection('edp_accounts').doc(accDoc.id).update({ pass: newP });
+        currentUser.pass = newP;
+
+        alert("Passwort erfolgreich geändert!");
+        togglePasswordModal(false);
+    });
+
+    async function adminResetPassword(docId, username) {
+        let newPass = prompt(`Neues Passwort für Benutzer "${username}" eingeben:`);
+        if (!newPass || newPass.trim() === "") return;
+
+        await db.collection('edp_accounts').doc(docId).update({ pass: newPass.trim() });
+        alert(`Passwort für "${username}" wurde erfolgreich zurückgesetzt!`);
+    }
+
+    async function adminDeleteAccount(docId, username) {
+        if (username === 'adminedp') {
+            alert("Der Haupt-Admin-Account kann nicht gelöscht werden!");
+            return;
+        }
+        if (!confirm(`Account "${username}" wirklich löschen?`)) return;
+
+        await db.collection('edp_accounts').doc(docId).delete();
+    }
+
+    function renderAdminLists() {
+        let keyDiv = document.getElementById('adminKeywordList');
+        keyDiv.innerHTML = '';
+        cloudData.keywords.forEach((k) => {
+            keyDiv.innerHTML += `<div class="item-row"><span>${k.name}</span> <button class="secondary" style="width:auto; padding:2px 5px;" onclick="deleteKeyword('${k.id}')">Löschen</button></div>`;
+        });
+
+        let accDiv = document.getElementById('adminAccountList');
+        accDiv.innerHTML = '';
+        cloudData.accounts.forEach(a => {
+            let badgeAreaClass = a.isAdmin ? 'badge-admin' : 'badge-jf';
+            let areaLabel = a.isAdmin ? 'Administrator' : 'Benutzer';
+            accDiv.innerHTML += `
+                <div class="item-row">
+                    <span><strong>${a.user}</strong> <span class="badge ${badgeAreaClass}">${areaLabel}</span> (Schreiben: ${a.canEdit ? 'Ja' : 'Nein'})</span>
+                    <div style="display:flex; gap:4px;">
+                        <button class="secondary" style="width:auto; padding:2px 6px;" onclick="adminResetPassword('${a.id}', '${a.user}')">PW zurücksetzen</button>
+                        ${a.user !== 'adminedp' ? `<button class="secondary" style="width:auto; padding:2px 6px; background:#b71c1c;" onclick="adminDeleteAccount('${a.id}', '${a.user}')">Löschen</button>` : ''}
+                    </div>
+                </div>`;
+        });
+    }
+
+    document.getElementById('addKeywordForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        let name = document.getElementById('newKeyName').value.trim();
+        await db.collection('edp_keywords').add({ name });
+        document.getElementById('newKeyName').value = '';
+    });
+
+    document.getElementById('addAccountForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        let user = document.getElementById('accUser').value.trim();
+        let pass = document.getElementById('accPass').value.trim();
+        let canEdit = document.getElementById('accCanEdit').value === 'true';
+
+        if (cloudData.accounts.some(a => a.user === user)) {
+            alert("Benutzername existiert bereits!");
+            return;
+        }
+        await db.collection('edp_accounts').add({ user, pass, isAdmin: false, canEdit });
+        document.getElementById('addAccountForm').reset();
+        alert("Account erfolgreich erstellt!");
+    });
+
+    async function deleteKeyword(id) {
+        await db.collection('edp_keywords').doc(id).delete();
+    }
+
+    // Einsatz anlegen
+    document.getElementById('incidentForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (currentUser.canEdit === false && !currentUser.isAdmin) return;
+
+        let type = document.getElementById('incType').value;
+        let location = document.getElementById('incLocationText').value.trim();
+        let patient = document.getElementById('incPatient').value.trim() || 'Unbekannt';
+        let description = document.getElementById('incDescription').value.trim();
+        let timeString = new Date().toTimeString().substring(0, 5);
+        let incId = Math.floor(100 + Math.random() * 900);
+
+        let newInc = {
+            id: incId,
+            createdBy: currentUser.user,
+            time: timeString,
+            type: type,
+            location: location,
+            patient: patient,
+            description: description,
+            status: 'Neu'
+        };
+
+        await db.collection('edp_incidents').doc(incId.toString()).set(newInc);
+        selectedIncidentId = incId;
+
+        await addLog(incId, `Einsatz #${incId} (${type}) erfasst.`);
+        if (description) {
+            await addLog(incId, `Beschreibung: ${description}`);
+        }
+
+        document.getElementById('incLocationText').value = '';
+        document.getElementById('incDescription').value = '';
+        document.getElementById('incPatient').value = '';
+    });
+
+    function renderTable() {
+        let tbody = document.getElementById('incidentTableBody');
+        tbody.innerHTML = '';
+
+        // Nur eigene Einsätze anzeigen, es sei denn man ist Admin
+        let filtered = currentUser && currentUser.isAdmin
+            ? cloudData.incidents
+            : cloudData.incidents.filter(i => i.createdBy === currentUser.user);
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Keine Einsätze vorhanden.</td></tr>`;
+            selectedIncidentId = null;
             setCrewPanelActive(false, null);
             setLogNoteActive(false, null);
-            renderGlobalLogs();
-            if (currentUser.isAdmin) renderAdminLists();
+            renderDetails(null);
+            return;
         }
 
-        function loadFormInputs() {
-            let keySelect = document.getElementById('incType');
-            keySelect.innerHTML = '';
-            cloudData.keywords.forEach(k => {
-                keySelect.innerHTML += `<option value="${k.name}">${k.name}</option>`;
-            });
+        if (!filtered.some(i => i.id === selectedIncidentId)) {
+            selectedIncidentId = filtered[0].id;
         }
 
-        function toggleAdminModal(show) {
-            document.getElementById('adminModal').style.display = show ? 'flex' : 'none';
-            if (show) renderAdminLists();
-        }
+        filtered.forEach(inc => {
+            let tr = document.createElement('tr');
+            if (inc.id === selectedIncidentId) tr.classList.add('selected');
 
-        function togglePasswordModal(show) {
-            document.getElementById('changePasswordModal').style.display = show ? 'flex' : 'none';
-            document.getElementById('changePasswordForm').reset();
-            document.getElementById('changePassError').innerText = '';
-        }
+            let badgeClass = 'badge-neu';
+            if (inc.status === 'Aktiv') badgeClass = 'badge-aktiv';
+            if (inc.status === 'Abgeschlossen') badgeClass = 'badge-fertig';
 
-        // Passwort ändern
-        document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            let oldP = document.getElementById('oldPassInput').value;
-            let newP = document.getElementById('newPassInput').value;
-            let confP = document.getElementById('newPassConfirmInput').value;
-
-            if (newP !== confP) {
-                document.getElementById('changePassError').innerText = "Das neue Passwort stimmt nicht mit der Bestätigung überein!";
-                return;
-            }
-
-            let accDoc = cloudData.accounts.find(a => a.user === currentUser.user);
-            if (!accDoc || accDoc.pass !== oldP) {
-                document.getElementById('changePassError').innerText = "Das alte Passwort ist falsch!";
-                return;
-            }
-
-            await db.collection('edp_accounts').doc(accDoc.id).update({ pass: newP });
-            currentUser.pass = newP;
-
-            alert("Passwort erfolgreich geändert!");
-            togglePasswordModal(false);
-        });
-
-        async function adminResetPassword(docId, username) {
-            let newPass = prompt(`Neues Passwort für Benutzer "${username}" eingeben:`);
-            if (!newPass || newPass.trim() === "") return;
-
-            await db.collection('edp_accounts').doc(docId).update({ pass: newPass.trim() });
-            alert(`Passwort für "${username}" wurde erfolgreich zurückgesetzt!`);
-        }
-
-        async function adminDeleteAccount(docId, username) {
-            if (username === 'adminedp') {
-                alert("Der Haupt-Admin-Account kann nicht gelöscht werden!");
-                return;
-            }
-            if (!confirm(`Account "${username}" wirklich löschen?`)) return;
-
-            await db.collection('edp_accounts').doc(docId).delete();
-        }
-
-        function renderAdminLists() {
-            let keyDiv = document.getElementById('adminKeywordList');
-            keyDiv.innerHTML = '';
-            cloudData.keywords.forEach((k) => {
-                keyDiv.innerHTML += `<div class="item-row"><span>${k.name}</span> <button class="secondary" style="width:auto; padding:2px 5px;" onclick="deleteKeyword('${k.id}')">Löschen</button></div>`;
-            });
-
-            let accDiv = document.getElementById('adminAccountList');
-            accDiv.innerHTML = '';
-            cloudData.accounts.forEach(a => {
-                let badgeAreaClass = a.isAdmin ? 'badge-admin' : 'badge-jf';
-                let areaLabel = a.isAdmin ? 'Administrator' : 'Jugendfeuerwehr';
-                accDiv.innerHTML += `
-                    <div class="item-row">
-                        <span><strong>${a.user}</strong> <span class="badge ${badgeAreaClass}">${areaLabel}</span> (Schreiben: ${a.canEdit ? 'Ja' : 'Nein'})</span> 
-                        <div style="display:flex; gap:4px;">
-                            <button class="secondary" style="width:auto; padding:2px 6px;" onclick="adminResetPassword('${a.id}', '${a.user}')">PW zurücksetzen</button>
-                            ${a.user !== 'adminedp' ? `<button class="secondary" style="width:auto; padding:2px 6px; background:#b71c1c;" onclick="adminDeleteAccount('${a.id}', '${a.user}')">Löschen</button>` : ''}
-                        </div>
-                    </div>`;
-            });
-        }
-
-        document.getElementById('addKeywordForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            let name = document.getElementById('newKeyName').value.trim();
-            await db.collection('edp_keywords').add({ name });
-            document.getElementById('newKeyName').value = '';
-        });
-
-        document.getElementById('addAccountForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            let user = document.getElementById('accUser').value.trim();
-            let pass = document.getElementById('accPass').value.trim();
-            let canEdit = document.getElementById('accCanEdit').value === 'true';
-
-            if (cloudData.accounts.some(a => a.user === user)) {
-                alert("Benutzername existiert bereits!");
-                return;
-            }
-            await db.collection('edp_accounts').add({ user, pass, isAdmin: false, canEdit });
-            document.getElementById('addAccountForm').reset();
-            alert("Account erfolgreich erstellt!");
-        });
-
-        async function deleteKeyword(id) {
-            await db.collection('edp_keywords').doc(id).delete();
-        }
-
-        // Einsatz anlegen
-        document.getElementById('incidentForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (currentUser.canEdit === false && !currentUser.isAdmin) return;
-
-            let type = document.getElementById('incType').value;
-            let location = document.getElementById('incLocationText').value.trim();
-            let patient = document.getElementById('incPatient').value.trim() || 'Unbekannt';
-            let description = document.getElementById('incDescription').value.trim();
-            let timeString = new Date().toTimeString().substring(0, 5);
-            let incId = Math.floor(100 + Math.random() * 900);
-
-            let newInc = {
-                id: incId,
-                time: timeString,
-                type: type,
-                location: location,
-                patient: patient,
-                description: description,
-                status: 'Neu'
+            tr.innerHTML = `
+                <td>#${inc.id}</td>
+                <td>${inc.time}</td>
+                <td>${inc.type}</td>
+                <td>${inc.location}</td>
+                <td><span class="badge ${badgeClass}">${inc.status}</span></td>
+            `;
+            tr.onclick = () => {
+                selectedIncidentId = inc.id;
+                renderTable();
+                renderDetails(inc.id);
             };
-
-            await db.collection('edp_incidents').doc(incId.toString()).set(newInc);
-            selectedIncidentId = incId;
-
-            await addLog(incId, `Einsatz #${incId} (${type}) erfasst.`);
-            if (description) {
-                await addLog(incId, `Beschreibung: ${description}`);
-            }
-
-            document.getElementById('incLocationText').value = '';
-            document.getElementById('incDescription').value = '';
-            document.getElementById('incPatient').value = '';
+            tbody.appendChild(tr);
         });
 
-        function renderTable() {
-            let tbody = document.getElementById('incidentTableBody');
-            tbody.innerHTML = '';
-
-            let filtered = cloudData.incidents;
-
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Keine Einsätze vorhanden.</td></tr>`;
-                selectedIncidentId = null;
-                setCrewPanelActive(false, null);
-                setLogNoteActive(false, null);
-                renderDetails(null);
-                return;
-            }
-
-            if (!filtered.some(i => i.id === selectedIncidentId)) {
-                selectedIncidentId = filtered[0].id;
-            }
-
-            filtered.forEach(inc => {
-                let tr = document.createElement('tr');
-                if (inc.id === selectedIncidentId) tr.classList.add('selected');
-
-                let badgeClass = 'badge-neu';
-                if (inc.status === 'Aktiv') badgeClass = 'badge-aktiv';
-                if (inc.status === 'Abgeschlossen') badgeClass = 'badge-fertig';
-
-                tr.innerHTML = `
-                    <td>#${inc.id}</td>
-                    <td>${inc.time}</td>
-                    <td>${inc.type}</td>
-                    <td>${inc.location}</td>
-                    <td><span class="badge ${badgeClass}">${inc.status}</span></td>
-                `;
-                tr.onclick = () => {
-                    selectedIncidentId = inc.id;
-                    renderTable();
-                    renderDetails(inc.id);
-                };
-                tbody.appendChild(tr);
-            });
-
-            if (selectedIncidentId) {
-                let inc = filtered.find(i => i.id === selectedIncidentId);
-                if (inc) {
-                    setCrewPanelActive(true, inc);
-                    setLogNoteActive(true, inc);
-                    renderDetails(inc.id);
-                }
+        if (selectedIncidentId) {
+            let inc = filtered.find(i => i.id === selectedIncidentId);
+            if (inc) {
+                setCrewPanelActive(true, inc);
+                setLogNoteActive(true, inc);
+                renderDetails(inc.id);
             }
         }
+    }
 
-        function setCrewPanelActive(isActive, inc = null) {
-            let vSel = document.getElementById('assignVehicle');
-            let pSel = document.getElementById('assignPerson');
-            let posSel = document.getElementById('assignPosition');
-            let btn = document.getElementById('btnAssign');
-            let badge = document.getElementById('activeIncidentBadge');
+    function setCrewPanelActive(isActive, inc = null) {
+        let vSel = document.getElementById('assignVehicle');
+        let pSel = document.getElementById('assignPerson');
+        let posSel = document.getElementById('assignPosition');
+        let btn = document.getElementById('btnAssign');
+        let badge = document.getElementById('activeIncidentBadge');
 
-            if (isActive && inc) {
-                badge.innerText = `Einsatz #${inc.id} (${inc.status})`;
-                if (inc.status === 'Abgeschlossen') {
-                    badge.style.background = 'var(--accent-green)';
-                    badge.style.color = 'white';
-                    vSel.disabled = true;
-                    pSel.disabled = true;
-                    posSel.disabled = true;
-                    btn.disabled = true;
-                } else {
-                    badge.style.background = 'var(--accent-orange)';
-                    badge.style.color = 'black';
-                    vSel.disabled = false;
-                    pSel.disabled = false;
-                    posSel.disabled = false;
-                    btn.disabled = false;
-                    updateAssignDropdowns();
-                }
-                renderAssignments();
-            } else {
+        if (isActive && inc) {
+            badge.innerText = `Einsatz #${inc.id} (${inc.status})`;
+            if (inc.status === 'Abgeschlossen') {
+                badge.style.background = 'var(--accent-green)';
+                badge.style.color = 'white';
                 vSel.disabled = true;
                 pSel.disabled = true;
                 posSel.disabled = true;
                 btn.disabled = true;
-                badge.innerText = 'Kein aktiver Einsatz ausgewählt';
-                badge.style.background = '#444';
-                badge.style.color = 'var(--text-muted)';
-                document.getElementById('assignedCrewList').innerHTML = `<div style="color:var(--text-muted); text-align:center; font-size:0.75rem; margin-top:5px;">Bitte Einsatz wählen.</div>`;
-            }
-        }
-
-        function setLogNoteActive(isActive, inc = null) {
-            let input = document.getElementById('logNoteInput');
-            let btn = document.getElementById('btnLogNote');
-            if (isActive && inc && inc.status !== 'Abgeschlossen') {
-                input.disabled = false;
-                btn.disabled = false;
-                input.placeholder = `Info zu Einsatz #${inc.id} eintragen...`;
             } else {
-                input.disabled = true;
-                btn.disabled = true;
-                input.placeholder = inc && inc.status === 'Abgeschlossen' ? "Einsatz ist abgeschlossen." : "Erst Einsatz auswählen...";
+                badge.style.background = 'var(--accent-orange)';
+                badge.style.color = 'black';
+                vSel.disabled = false;
+                pSel.disabled = false;
+                posSel.disabled = false;
+                btn.disabled = false;
+                updateAssignDropdowns();
             }
+            renderAssignments();
+        } else {
+            vSel.disabled = true;
+            pSel.disabled = true;
+            posSel.disabled = true;
+            btn.disabled = true;
+            badge.innerText = 'Kein aktiver Einsatz ausgewählt';
+            badge.style.background = '#444';
+            badge.style.color = 'var(--text-muted)';
+            document.getElementById('assignedCrewList').innerHTML = `<div style="color:var(--text-muted); text-align:center; font-size:0.75rem; margin-top:5px;">Bitte Einsatz wählen.</div>`;
+        }
+    }
+
+    function setLogNoteActive(isActive, inc = null) {
+        let input = document.getElementById('logNoteInput');
+        let btn = document.getElementById('btnLogNote');
+        if (isActive && inc && inc.status !== 'Abgeschlossen') {
+            input.disabled = false;
+            btn.disabled = false;
+            input.placeholder = `Info zu Einsatz #${inc.id} eintragen...`;
+        } else {
+            input.disabled = true;
+            btn.disabled = true;
+            input.placeholder = inc && inc.status === 'Abgeschlossen' ? "Einsatz ist abgeschlossen." : "Erst Einsatz auswählen...";
+        }
+    }
+
+    function renderDetails(id) {
+        let inc = cloudData.incidents.find(i => i.id === id);
+        let panel = document.getElementById('detailPanel');
+
+        if (!inc) {
+            panel.innerHTML = `<p style="color: var(--text-muted); text-align: center; margin-top: 15px;">Wähle einen Einsatz aus.</p>`;
+            return;
         }
 
-        function renderDetails(id) {
-            let inc = cloudData.incidents.find(i => i.id === id);
-            let panel = document.getElementById('detailPanel');
+        let canAction = currentUser.canEdit || currentUser.isAdmin;
+        let descHtml = inc.description ? `<br><strong>Beschreibung:</strong> ${inc.description}` : '';
 
-            if (!inc) {
-                panel.innerHTML = `<p style="color: var(--text-muted); text-align: center; margin-top: 15px;">Wähle einen Einsatz aus.</p>`;
-                return;
-            }
+        panel.innerHTML = `
+            <div>
+                <strong>ID:</strong> #${inc.id}<br>
+                <strong>Stichwort:</strong> ${inc.type}<br>
+                <strong>Ort:</strong> ${inc.location}<br>
+                <strong>Betroffener:</strong> ${inc.patient}
+                ${descHtml}<br>
+                <strong>Status:</strong> ${inc.status}<br>
+                <hr style="border:0; border-top:1px solid var(--border-color); margin:6px 0;">
+                ${canAction ? `
+                    <div style="display:flex; flex-direction:column; gap:4px;">
+                        ${inc.status !== 'Aktiv' ? `<button onclick="updateStatus(${inc.id}, 'Aktiv')">Status: In Bearbeitung</button>` : ''}
+                        ${inc.status !== 'Abgeschlossen' ? `<button class="secondary" style="background-color:var(--accent-green); color:white;" onclick="updateStatus(${inc.id}, 'Abgeschlossen')">Einsatz Beenden</button>` : ''}
+                        <button class="secondary" style="background-color:var(--accent-red); color:white; margin-top:4px;" onclick="deleteIncident(${inc.id})">Einsatz löschen</button>
+                    </div>
+                ` : `<em style="color:var(--text-muted);">Nur Lese-Rechte.</em>`}
+            </div>
+        `;
+        renderLogsForIncident(id);
+    }
 
-            let canAction = currentUser.canEdit || currentUser.isAdmin;
-            let descHtml = inc.description ? `<br><strong>Beschreibung:</strong> ${inc.description}` : '';
+    async function updateStatus(id, newStatus) {
+        await db.collection('edp_incidents').doc(id.toString()).update({ status: newStatus });
+        await addLog(id, `Einsatz #${id} Status geändert zu: ${newStatus}`);
+    }
 
-            panel.innerHTML = `
-                <div>
-                    <strong>ID:</strong> #${inc.id}<br>
-                    <strong>Stichwort:</strong> ${inc.type}<br>
-                    <strong>Ort:</strong> ${inc.location}<br>
-                    <strong>Betroffener:</strong> ${inc.patient}
-                    ${descHtml}<br>
-                    <strong>Status:</strong> ${inc.status}<br>
-                    <hr style="border:0; border-top:1px solid var(--border-color); margin:6px 0;">
-                    ${canAction ? `
-                        <div style="display:flex; flex-direction:column; gap:4px;">
-                            ${inc.status !== 'Aktiv' ? `<button onclick="updateStatus(${inc.id}, 'Aktiv')">Status: In Bearbeitung</button>` : ''}
-                            ${inc.status !== 'Abgeschlossen' ? `<button class="secondary" style="background-color:var(--accent-green); color:white;" onclick="updateStatus(${inc.id}, 'Abgeschlossen')">Einsatz Beenden</button>` : ''}
-                            <button class="secondary" style="background-color:var(--accent-red); color:white; margin-top:4px;" onclick="deleteIncident(${inc.id})">Einsatz löschen</button>
-                        </div>
-                    ` : `<em style="color:var(--text-muted);">Nur Lese-Rechte.</em>`}
+    async function deleteIncident(id) {
+        if (!confirm(`Einsatz #${id} wirklich unwiderruflich löschen?`)) return;
+
+        await db.collection('edp_incidents').doc(id.toString()).delete();
+
+        let batchAssignments = cloudData.assignments.filter(a => a.incidentId === id);
+        for (let a of batchAssignments) {
+            await db.collection('edp_assignments').doc(a.id).delete();
+        }
+
+        let batchLogs = cloudData.logs.filter(l => l.incidentId === id);
+        for (let l of batchLogs) {
+            if (l.docId) await db.collection('edp_logs').doc(l.docId).delete();
+        }
+
+        selectedIncidentId = null;
+        renderTable();
+    }
+
+    // Personal hinzufügen
+    document.getElementById('addPersonForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        let name = document.getElementById('personName').value.trim();
+        let role = document.getElementById('personRole').value;
+        await db.collection('edp_persons').add({ name, role, createdBy: currentUser.user });
+        document.getElementById('personName').value = '';
+    });
+
+    function renderPersons() {
+        let list = document.getElementById('personList');
+        list.innerHTML = '';
+
+        let filtered = currentUser && currentUser.isAdmin
+            ? cloudData.persons
+            : cloudData.persons.filter(p => p.createdBy === currentUser.user);
+
+        filtered.forEach((p) => {
+            let badgeClass = 'badge-jf';
+            if (p.role === 'Betreuer') badgeClass = 'badge-betreuer';
+            if (p.role === 'Gast') badgeClass = 'badge-gast';
+            if (p.role === 'Helfer') badgeClass = 'badge-helfer';
+
+            let roleBadge = `<span class="badge ${badgeClass}">${p.role}</span>`;
+            list.innerHTML += `<div class="item-row"><span>${p.name} ${roleBadge}</span> <button class="secondary" style="width:auto; padding:2px 5px;" onclick="deletePerson('${p.id}')">X</button></div>`;
+        });
+    }
+
+    async function deletePerson(id) {
+        await db.collection('edp_persons').doc(id).delete();
+    }
+
+    // Fahrzeuge hinzufügen
+    document.getElementById('addVehicleForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        let type = document.getElementById('vehType').value.trim();
+        let funk = document.getElementById('vehFunk').value.trim();
+
+        await db.collection('edp_vehicles').add({ type, funk, createdBy: currentUser.user });
+
+        document.getElementById('vehType').value = '';
+        document.getElementById('vehFunk').value = '';
+    });
+
+    function renderVehicles() {
+        let list = document.getElementById('vehicleList');
+        list.innerHTML = '';
+
+        let filtered = currentUser && currentUser.isAdmin
+            ? cloudData.vehicles
+            : cloudData.vehicles.filter(v => v.createdBy === currentUser.user);
+
+        filtered.forEach((v) => {
+            list.innerHTML += `<div class="item-row"><span>${v.type} (${v.funk})</span> <button class="secondary" style="width:auto; padding:2px 5px;" onclick="deleteVehicle('${v.id}')">X</button></div>`;
+        });
+    }
+
+    async function deleteVehicle(id) {
+        await db.collection('edp_vehicles').doc(id).delete();
+    }
+
+    function updateAssignDropdowns() {
+        let vSelect = document.getElementById('assignVehicle');
+        let pSelect = document.getElementById('assignPerson');
+
+        let vehicles = currentUser && currentUser.isAdmin
+            ? cloudData.vehicles
+            : cloudData.vehicles.filter(v => v.createdBy === currentUser.user);
+
+        let persons = currentUser && currentUser.isAdmin
+            ? cloudData.persons
+            : cloudData.persons.filter(p => p.createdBy === currentUser.user);
+
+        vSelect.innerHTML = '<option value="">-- Fahrzeug --</option>';
+        vehicles.forEach(v => {
+            vSelect.innerHTML += `<option value="${v.type} (${v.funk})">${v.type} (${v.funk})</option>`;
+        });
+
+        pSelect.innerHTML = '<option value="">-- Person --</option>';
+        persons.forEach(p => {
+            pSelect.innerHTML += `<option value="${p.name}">${p.name} (${p.role})</option>`;
+        });
+    }
+
+    // Personal zuteilen
+    document.getElementById('assignCrewForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!selectedIncidentId) return;
+
+        let vehicle = document.getElementById('assignVehicle').value;
+        let person = document.getElementById('assignPerson').value;
+        let position = document.getElementById('assignPosition').value;
+
+        if (!vehicle || !person || !position) return;
+
+        let inc = cloudData.incidents.find(i => i.id === selectedIncidentId);
+        if (inc && inc.status === 'Abgeschlossen') return;
+
+        let existing = cloudData.assignments.find(a => a.incidentId === selectedIncidentId && a.person === person);
+        if (existing) {
+            await db.collection('edp_assignments').doc(existing.id).update({ vehicle, position });
+        } else {
+            await db.collection('edp_assignments').add({ incidentId: selectedIncidentId, vehicle, person, position, createdBy: currentUser.user });
+        }
+
+        document.getElementById('assignCrewForm').reset();
+        updateAssignDropdowns();
+    });
+
+    function renderAssignments() {
+        if (!selectedIncidentId) return;
+
+        let inc = cloudData.incidents.find(i => i.id === selectedIncidentId);
+        let list = document.getElementById('assignedCrewList');
+        list.innerHTML = '';
+
+        let filtered = cloudData.assignments.filter(a => a.incidentId === selectedIncidentId);
+
+        if (filtered.length === 0) {
+            list.innerHTML = `<div style="color:var(--text-muted); text-align:center; font-size:0.75rem; margin-top:5px;">Keine Zuteilungen vorhanden.</div>`;
+            return;
+        }
+
+        let isClosed = inc && inc.status === 'Abgeschlossen';
+        let canAction = (currentUser.canEdit || currentUser.isAdmin) && !isClosed;
+
+        filtered.forEach((a) => {
+            let deleteBtnHtml = canAction ? `<button class="secondary" style="width:auto; padding:2px 5px;" onclick="deleteAssignment('${a.id}')">X</button>` : '';
+
+            list.innerHTML += `
+                <div class="item-row">
+                    <span><strong>${a.vehicle}</strong>: ${a.person} <em>(${a.position})</em></span>
+                    ${deleteBtnHtml}
                 </div>
             `;
-            renderLogsForIncident(id);
-        }
-
-        async function updateStatus(id, newStatus) {
-            await db.collection('edp_incidents').doc(id.toString()).update({ status: newStatus });
-            await addLog(id, `Einsatz #${id} Status geändert zu: ${newStatus}`);
-        }
-
-        async function deleteIncident(id) {
-            if (!confirm(`Einsatz #${id} wirklich unwiderruflich löschen?`)) return;
-
-            await db.collection('edp_incidents').doc(id.toString()).delete();
-
-            // Zugehörige Zuteilungen löschen
-            let batchAssignments = cloudData.assignments.filter(a => a.incidentId === id);
-            for (let a of batchAssignments) {
-                await db.collection('edp_assignments').doc(a.id).delete();
-            }
-
-            // Zugehörige Logs löschen
-            let batchLogs = cloudData.logs.filter(l => l.incidentId === id);
-            for (let l of batchLogs) {
-                if (l.docId) await db.collection('edp_logs').doc(l.docId).delete();
-            }
-
-            selectedIncidentId = null;
-            renderTable();
-        }
-
-        // Personal hinzufügen
-        document.getElementById('addPersonForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            let name = document.getElementById('personName').value.trim();
-            let role = document.getElementById('personRole').value;
-            await db.collection('edp_persons').add({ name, role });
-            document.getElementById('personName').value = '';
         });
+    }
 
-        function renderPersons() {
-            let list = document.getElementById('personList');
-            list.innerHTML = '';
+    async function deleteAssignment(id) {
+        await db.collection('edp_assignments').doc(id).delete();
+    }
 
-            cloudData.persons.forEach((p) => {
-                let roleBadge = p.role === 'Betreuer' ? '<span class="badge badge-betreuer">Betreuer</span>' : '<span class="badge badge-jf">JF</span>';
-                list.innerHTML += `<div class="item-row"><span>${p.name} ${roleBadge}</span> <button class="secondary" style="width:auto; padding:2px 5px;" onclick="deletePerson('${p.id}')">X</button></div>`;
-            });
+    // Tagebuch Logik
+    document.getElementById('addLogNoteForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!selectedIncidentId) return;
+        let text = document.getElementById('logNoteInput').value.trim();
+        if (!text) return;
+
+        await addLog(selectedIncidentId, `[Einsatz #${selectedIncidentId}] ${text}`);
+        document.getElementById('logNoteInput').value = '';
+    });
+
+    async function addLog(incId, text) {
+        let time = new Date().toTimeString().substring(0, 8);
+        let timestamp = Date.now();
+        await db.collection('edp_logs').add({ incidentId: incId, createdBy: currentUser.user, time, text, timestamp });
+    }
+
+    function renderGlobalLogs() {
+        let logBook = document.getElementById('logBook');
+        logBook.innerHTML = '';
+
+        let filtered = currentUser && currentUser.isAdmin
+            ? cloudData.logs
+            : cloudData.logs.filter(l => l.createdBy === currentUser.user);
+
+        if (filtered.length === 0) {
+            logBook.innerHTML = `<div class="log-entry"><span class="log-time">[System]</span> Bereit.</div>`;
+            return;
         }
 
-        async function deletePerson(id) {
-            await db.collection('edp_persons').doc(id).delete();
-        }
-
-        // Fahrzeuge hinzufügen
-        document.getElementById('addVehicleForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            let type = document.getElementById('vehType').value.trim();
-            let funk = document.getElementById('vehFunk').value.trim();
-
-            await db.collection('edp_vehicles').add({ type, funk });
-
-            document.getElementById('vehType').value = '';
-            document.getElementById('vehFunk').value = '';
+        let sortedLogs = [...filtered].reverse();
+        sortedLogs.forEach(l => {
+            logBook.innerHTML += `<div class="log-entry"><span class="log-time">[${l.time}]</span> ${l.text}</div>`;
         });
+    }
 
-        function renderVehicles() {
-            let list = document.getElementById('vehicleList');
-            list.innerHTML = '';
+    function renderLogsForIncident(id) {
+        let logBook = document.getElementById('logBook');
+        logBook.innerHTML = '';
 
-            cloudData.vehicles.forEach((v) => {
-                list.innerHTML += `<div class="item-row"><span>${v.type} (${v.funk})</span> <button class="secondary" style="width:auto; padding:2px 5px;" onclick="deleteVehicle('${v.id}')">X</button></div>`;
-            });
+        let filtered = cloudData.logs.filter(l => l.incidentId === id || l.incidentId === 'System');
+        if (!currentUser.isAdmin) {
+            filtered = filtered.filter(l => l.createdBy === currentUser.user || l.incidentId === 'System');
         }
 
-        async function deleteVehicle(id) {
-            await db.collection('edp_vehicles').doc(id).delete();
+        if (filtered.length === 0) {
+            logBook.innerHTML = `<div class="log-entry"><span class="log-time">[System]</span> Keine Einträge.</div>`;
+            return;
         }
 
-        function updateAssignDropdowns() {
-            let vSelect = document.getElementById('assignVehicle');
-            let pSelect = document.getElementById('assignPerson');
-
-            vSelect.innerHTML = '<option value="">-- Fahrzeug --</option>';
-            cloudData.vehicles.forEach(v => {
-                vSelect.innerHTML += `<option value="${v.type} (${v.funk})">${v.type} (${v.funk})</option>`;
-            });
-
-            pSelect.innerHTML = '<option value="">-- Person --</option>';
-            cloudData.persons.forEach(p => {
-                pSelect.innerHTML += `<option value="${p.name}">${p.name} (${p.role})</option>`;
-            });
-        }
-
-        // Personal zuteilen
-        document.getElementById('assignCrewForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!selectedIncidentId) return;
-
-            let vehicle = document.getElementById('assignVehicle').value;
-            let person = document.getElementById('assignPerson').value;
-            let position = document.getElementById('assignPosition').value;
-
-            if (!vehicle || !person || !position) return;
-
-            let inc = cloudData.incidents.find(i => i.id === selectedIncidentId);
-            if (inc && inc.status === 'Abgeschlossen') return;
-            
-            // Prüfen ob Person schon zugeteilt ist
-            let existing = cloudData.assignments.find(a => a.incidentId === selectedIncidentId && a.person === person);
-            if (existing) {
-                await db.collection('edp_assignments').doc(existing.id).update({ vehicle, position });
-            } else {
-                await db.collection('edp_assignments').add({ incidentId: selectedIncidentId, vehicle, person, position });
-            }
-
-            document.getElementById('assignCrewForm').reset();
-            updateAssignDropdowns();
+        let sortedLogs = [...filtered].reverse();
+        sortedLogs.forEach(l => {
+            logBook.innerHTML += `<div class="log-entry"><span class="log-time">[${l.time}]</span> ${l.text}</div>`;
         });
-
-        function renderAssignments() {
-            if (!selectedIncidentId) return;
-
-            let inc = cloudData.incidents.find(i => i.id === selectedIncidentId);
-            let list = document.getElementById('assignedCrewList');
-            list.innerHTML = '';
-
-            let filtered = cloudData.assignments.filter(a => a.incidentId === selectedIncidentId);
-
-            if (filtered.length === 0) {
-                list.innerHTML = `<div style="color:var(--text-muted); text-align:center; font-size:0.75rem; margin-top:5px;">Keine Zuteilungen vorhanden.</div>`;
-                return;
-            }
-
-            let isClosed = inc && inc.status === 'Abgeschlossen';
-            let canAction = (currentUser.canEdit || currentUser.isAdmin) && !isClosed;
-
-            filtered.forEach((a) => {
-                let deleteBtnHtml = canAction ? `<button class="secondary" style="width:auto; padding:2px 5px;" onclick="deleteAssignment('${a.id}')">X</button>` : '';
-                
-                list.innerHTML += `
-                    <div class="item-row">
-                        <span><strong>${a.vehicle}</strong>: ${a.person} <em>(${a.position})</em></span>
-                        ${deleteBtnHtml}
-                    </div>
-                `;
-            });
-        }
-
-        async function deleteAssignment(id) {
-            await db.collection('edp_assignments').doc(id).delete();
-        }
-
-        // Tagebuch Logik
-        document.getElementById('addLogNoteForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!selectedIncidentId) return;
-            let text = document.getElementById('logNoteInput').value.trim();
-            if (!text) return;
-
-            await addLog(selectedIncidentId, `[Einsatz #${selectedIncidentId}] ${text}`);
-            document.getElementById('logNoteInput').value = '';
-        });
-
-        async function addLog(incId, text) {
-            let time = new Date().toTimeString().substring(0, 8);
-            let timestamp = Date.now();
-            await db.collection('edp_logs').add({ incidentId: incId, time, text, timestamp });
-        }
-
-        function renderGlobalLogs() {
-            let logBook = document.getElementById('logBook');
-            logBook.innerHTML = '';
-
-            if (cloudData.logs.length === 0) {
-                logBook.innerHTML = `<div class="log-entry"><span class="log-time">[System]</span> Bereit.</div>`;
-                return;
-            }
-
-            // Älteste zuerst anzeigen für den Verlauf
-            let sortedLogs = [...cloudData.logs].reverse();
-            sortedLogs.forEach(l => {
-                logBook.innerHTML += `<div class="log-entry"><span class="log-time">[${l.time}]</span> ${l.text}</div>`;
-            });
-        }
-
-        function renderLogsForIncident(id) {
-            let logBook = document.getElementById('logBook');
-            logBook.innerHTML = '';
-
-            let filtered = cloudData.logs.filter(l => l.incidentId === id || l.incidentId === 'System');
-            if (filtered.length === 0) {
-                logBook.innerHTML = `<div class="log-entry"><span class="log-time">[System]</span> Keine Einträge.</div>`;
-                return;
-            }
-
-            let sortedLogs = [...filtered].reverse();
-            sortedLogs.forEach(l => {
-                logBook.innerHTML += `<div class="log-entry"><span class="log-time">[${l.time}]</span> ${l.text}</div>`;
-            });
-        }
-    </script>
+    }
+</script>
 </body>
 </html>
