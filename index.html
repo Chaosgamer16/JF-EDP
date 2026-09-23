@@ -323,9 +323,9 @@
                 <label>Passwort</label>
                 <input type="password" id="loginPass" required placeholder="Passwort">
             </div>
-            <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
-                <input type="checkbox" id="stayLoggedIn" style="width: auto; cursor: pointer;">
-                <label for="stayLoggedIn" style="cursor: pointer; margin-bottom: 0; color: var(--text-color); font-size: 0.8rem;">Angemeldet bleiben</label>
+            <div class="form-group" style="margin-top: 10px;">
+                <label>Angemeldet bleiben</label>
+                <button type="button" id="stayLoggedInBtn" class="secondary" onclick="toggleStayLoggedIn()" style="background-color: #424242;">Nein</button>
             </div>
             <button type="submit" style="margin-top: 10px;">Anmelden</button>
         </form>
@@ -576,6 +576,7 @@
 
     let currentUser = null;
     let selectedIncidentId = null;
+    let stayLoggedInState = false;
 
     let cloudData = {
         accounts: [],
@@ -590,6 +591,18 @@
     setInterval(() => {
         document.getElementById('liveClock').innerText = new Date().toTimeString().split(' ')[0];
     }, 1000);
+
+    function toggleStayLoggedIn() {
+        stayLoggedInState = !stayLoggedInState;
+        let btn = document.getElementById('stayLoggedInBtn');
+        if (stayLoggedInState) {
+            btn.innerText = "Ja";
+            btn.style.backgroundColor = "var(--accent-green)";
+        } else {
+            btn.innerText = "Nein";
+            btn.style.backgroundColor = "#424242";
+        }
+    }
 
     async function initFirebaseSync() {
         const accSnap = await db.collection('edp_accounts').get();
@@ -610,10 +623,7 @@
 
         db.collection('edp_accounts').onSnapshot(snap => {
             cloudData.accounts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-            // Prüfen, ob bereits ein persistenter Login vorliegt (nachdem Accounts geladen wurden)
             checkPersistedLogin();
-
             if (currentUser && currentUser.isAdmin) renderAdminLists();
         });
 
@@ -660,7 +670,7 @@
     initFirebaseSync();
 
     function checkPersistedLogin() {
-        if (currentUser) return; // Bereits eingeloggt
+        if (currentUser) return;
 
         let savedUser = localStorage.getItem('edp_logged_user');
         if (savedUser && cloudData.accounts.length > 0) {
@@ -678,13 +688,12 @@
         e.preventDefault();
         let u = document.getElementById('loginUser').value.trim();
         let p = document.getElementById('loginPass').value.trim();
-        let stayLoggedIn = document.getElementById('stayLoggedIn').checked;
 
         let found = cloudData.accounts.find(acc => acc.user === u && acc.pass === p);
 
         if (found) {
             currentUser = found;
-            if (stayLoggedIn) {
+            if (stayLoggedInState) {
                 localStorage.setItem('edp_logged_user', found.user);
             } else {
                 localStorage.removeItem('edp_logged_user');
@@ -701,18 +710,22 @@
     function logout() {
         currentUser = null;
         selectedIncidentId = null;
-        localStorage.removeItem('edp_logged_user'); // Dauerhaften Login löschen
+        localStorage.removeItem('edp_logged_user');
 
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('appContainer').style.display = 'none';
         document.getElementById('loginForm').reset();
         document.getElementById('loginError').innerText = '';
+        stayLoggedInState = false;
+        let btn = document.getElementById('stayLoggedInBtn');
+        btn.innerText = "Nein";
+        btn.style.backgroundColor = "#424242";
+
         setCrewPanelActive(false, null);
         setLogNoteActive(false, null);
     }
 
     function initApp() {
-        let roleText = currentUser.isAdmin ? 'Administrator' : `Account: ${currentUser.user}`;
         document.getElementById('currentUserDisplay').innerText = `Eingeloggt: ${currentUser.user}`;
         document.getElementById('currentAreaLabel').innerText = currentUser.user;
 
@@ -892,9 +905,7 @@
         let tbody = document.getElementById('incidentTableBody');
         tbody.innerHTML = '';
 
-        let filtered = currentUser && currentUser.isAdmin
-            ? cloudData.incidents
-            : cloudData.incidents.filter(i => i.createdBy === currentUser.user);
+        let filtered = cloudData.incidents.filter(i => i.createdBy === currentUser.user);
 
         if (filtered.length === 0) {
             tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Keine Einsätze vorhanden.</td></tr>`;
@@ -1064,9 +1075,7 @@
         let list = document.getElementById('personList');
         list.innerHTML = '';
 
-        let filtered = currentUser && currentUser.isAdmin
-            ? cloudData.persons
-            : cloudData.persons.filter(p => p.createdBy === currentUser.user);
+        let filtered = cloudData.persons.filter(p => p.createdBy === currentUser.user);
 
         filtered.forEach((p) => {
             let badgeClass = 'badge-jf';
@@ -1099,9 +1108,7 @@
         let list = document.getElementById('vehicleList');
         list.innerHTML = '';
 
-        let filtered = currentUser && currentUser.isAdmin
-            ? cloudData.vehicles
-            : cloudData.vehicles.filter(v => v.createdBy === currentUser.user);
+        let filtered = cloudData.vehicles.filter(v => v.createdBy === currentUser.user);
 
         filtered.forEach((v) => {
             list.innerHTML += `<div class="item-row"><span>${v.type} (${v.funk})</span> <button class="secondary" style="width:auto; padding:2px 5px;" onclick="deleteVehicle('${v.id}')">X</button></div>`;
@@ -1116,13 +1123,8 @@
         let vSelect = document.getElementById('assignVehicle');
         let pSelect = document.getElementById('assignPerson');
 
-        let vehicles = currentUser && currentUser.isAdmin
-            ? cloudData.vehicles
-            : cloudData.vehicles.filter(v => v.createdBy === currentUser.user);
-
-        let persons = currentUser && currentUser.isAdmin
-            ? cloudData.persons
-            : cloudData.persons.filter(p => p.createdBy === currentUser.user);
+        let vehicles = cloudData.vehicles.filter(v => v.createdBy === currentUser.user);
+        let persons = cloudData.persons.filter(p => p.createdBy === currentUser.user);
 
         vSelect.innerHTML = '<option value="">-- Fahrzeug --</option>';
         vehicles.forEach(v => {
@@ -1167,7 +1169,7 @@
         let list = document.getElementById('assignedCrewList');
         list.innerHTML = '';
 
-        let filtered = cloudData.assignments.filter(a => a.incidentId === selectedIncidentId);
+        let filtered = cloudData.assignments.filter(a => a.incidentId === selectedIncidentId && a.createdBy === currentUser.user);
 
         if (filtered.length === 0) {
             list.innerHTML = `<div style="color:var(--text-muted); text-align:center; font-size:0.75rem; margin-top:5px;">Keine Zuteilungen vorhanden.</div>`;
@@ -1214,9 +1216,7 @@
         let logBook = document.getElementById('logBook');
         logBook.innerHTML = '';
 
-        let filtered = currentUser && currentUser.isAdmin
-            ? cloudData.logs
-            : cloudData.logs.filter(l => l.createdBy === currentUser.user);
+        let filtered = cloudData.logs.filter(l => l.createdBy === currentUser.user || l.incidentId === 'System');
 
         if (filtered.length === 0) {
             logBook.innerHTML = `<div class="log-entry"><span class="log-time">[System]</span> Bereit.</div>`;
@@ -1233,10 +1233,7 @@
         let logBook = document.getElementById('logBook');
         logBook.innerHTML = '';
 
-        let filtered = cloudData.logs.filter(l => l.incidentId === id || l.incidentId === 'System');
-        if (!currentUser.isAdmin) {
-            filtered = filtered.filter(l => l.createdBy === currentUser.user || l.incidentId === 'System');
-        }
+        let filtered = cloudData.logs.filter(l => (l.incidentId === id || l.incidentId === 'System') && (l.createdBy === currentUser.user || l.incidentId === 'System'));
 
         if (filtered.length === 0) {
             logBook.innerHTML = `<div class="log-entry"><span class="log-time">[System]</span> Keine Einträge.</div>`;
