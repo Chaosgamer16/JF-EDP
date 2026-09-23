@@ -716,7 +716,7 @@
             cloudData.incidents = snap.docs.map(doc => ({ ...doc.data() }));
             cloudData.incidents.sort((a, b) => b.id - a.id);
             renderTable();
-            cleanupOrphanedData(); // Automatisch verwaiste Logs / Zuteilungen löschen
+            cleanupOrphanedData();
         });
 
         db.collection('edp_persons').onSnapshot(snap => {
@@ -747,19 +747,16 @@
         });
     }
 
-    // Automatische Bereinigung von verwaisten Logs und Zuteilungen im Hintergrund
     async function cleanupOrphanedData() {
         if (!cloudData.incidents) return;
         let validIncidentIds = new Set(cloudData.incidents.map(i => i.id));
 
-        // Alte Logs löschen, deren Einsatz nicht mehr existiert
         for (let l of cloudData.logs) {
             if (l.incidentId && !validIncidentIds.has(l.incidentId)) {
                 if (l.id) await db.collection('edp_logs').doc(l.id).delete();
             }
         }
 
-        // Alte Zuteilungen löschen, deren Einsatz nicht mehr existiert
         for (let a of cloudData.assignments) {
             if (a.incidentId && !validIncidentIds.has(a.incidentId)) {
                 if (a.id) await db.collection('edp_assignments').doc(a.id).delete();
@@ -984,7 +981,6 @@
         await db.collection('edp_keywords').doc(id).delete();
     }
 
-    // Einsatz anlegen
     document.getElementById('incidentForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         if (currentUser.canEdit === false && !currentUser.isAdmin) return;
@@ -1144,12 +1140,18 @@
 
         let canAction = currentUser.canEdit || currentUser.isAdmin;
         let descHtml = inc.description ? `<br><strong>Beschreibung:</strong> ${inc.description}` : '';
+        
+        // Google Maps URL mit encodeURIComponent codiert, damit Leerzeichen und Sonderzeichen fehlerfrei übergeben werden
+        let mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(inc.location)}`;
 
         panel.innerHTML = `
             <div>
                 <strong>ID:</strong> #${inc.id}<br>
                 <strong>Stichwort:</strong> ${inc.type}<br>
-                <strong>Ort:</strong> ${inc.location}<br>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px; margin-bottom: 2px;">
+                    <span><strong>Ort:</strong> ${inc.location}</span>
+                    <a href="${mapsUrl}" target="_blank" style="background-color: var(--accent-blue); color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; text-decoration: none; font-weight: bold; white-space: nowrap; margin-left: 6px;">Karte öffnen</a>
+                </div>
                 <strong>Betroffener:</strong> ${inc.patient}
                 ${descHtml}<br>
                 <strong>Status:</strong> ${inc.status}<br>
@@ -1194,7 +1196,6 @@
         renderTable();
     }
 
-    // Personal hinzufügen
     document.getElementById('addPersonForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         let name = document.getElementById('personName').value.trim();
@@ -1224,7 +1225,6 @@
         await db.collection('edp_persons').doc(id).delete();
     }
 
-    // Fahrzeuge hinzufügen
     document.getElementById('addVehicleForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         let type = document.getElementById('vehType').value.trim();
@@ -1269,7 +1269,6 @@
         });
     }
 
-    // Personal zuteilen
     document.getElementById('assignCrewForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         if (!selectedIncidentId) return;
@@ -1327,7 +1326,6 @@
         await db.collection('edp_assignments').doc(id).delete();
     }
 
-    // Tagebuch Logik
     document.getElementById('addLogNoteForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         if (!selectedIncidentId) return;
