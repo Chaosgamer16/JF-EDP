@@ -716,6 +716,7 @@
             cloudData.incidents = snap.docs.map(doc => ({ ...doc.data() }));
             cloudData.incidents.sort((a, b) => b.id - a.id);
             renderTable();
+            cleanupOrphanedData(); // Automatisch verwaiste Logs / Zuteilungen löschen
         });
 
         db.collection('edp_persons').onSnapshot(snap => {
@@ -744,6 +745,26 @@
                 renderEmptyLogs();
             }
         });
+    }
+
+    // Automatische Bereinigung von verwaisten Logs und Zuteilungen im Hintergrund
+    async function cleanupOrphanedData() {
+        if (!cloudData.incidents) return;
+        let validIncidentIds = new Set(cloudData.incidents.map(i => i.id));
+
+        // Alte Logs löschen, deren Einsatz nicht mehr existiert
+        for (let l of cloudData.logs) {
+            if (l.incidentId && !validIncidentIds.has(l.incidentId)) {
+                if (l.id) await db.collection('edp_logs').doc(l.id).delete();
+            }
+        }
+
+        // Alte Zuteilungen löschen, deren Einsatz nicht mehr existiert
+        for (let a of cloudData.assignments) {
+            if (a.incidentId && !validIncidentIds.has(a.incidentId)) {
+                if (a.id) await db.collection('edp_assignments').doc(a.id).delete();
+            }
+        }
     }
 
     initFirebaseSync();
@@ -1097,7 +1118,7 @@
 
         if (isActive && inc) {
             if (inc.status === 'Abgeschlossen') {
-                inputContainer.style.display = 'none'; // Versteckt das Eingabefeld bei beendeten Einsätzen komplett
+                inputContainer.style.display = 'none';
             } else {
                 inputContainer.style.display = 'block';
                 input.disabled = false;
@@ -1153,7 +1174,6 @@
     async function deleteIncident(id) {
         if (!confirm(`Einsatz #${id} wirklich unwiderruflich löschen?`)) return;
 
-        // Sofort das Tagebuch und den Status für diesen Einsatz zurücksetzen, damit nichts hängen bleibt
         selectedIncidentId = null;
         renderEmptyLogs();
         setCrewPanelActive(false, null);
