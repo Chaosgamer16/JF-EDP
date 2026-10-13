@@ -209,21 +209,22 @@
     </div>
 </div>
 
-<!-- Universelles Passwort-Bestätigungs-Modal zum Löschen -->
-<div id="passwordConfirmModal" class="modal">
+<!-- Universelles Modal für Meldungen & Bestätigungen -->
+<div id="customModal" class="modal">
     <div class="modal-content" style="width: 400px;">
-        <h3 id="confirmModalTitle">Sicherheitsabfrage</h3>
-        <p id="confirmModalText" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;"></p>
-        <form id="passwordConfirmForm">
-            <div class="form-group">
-                <label>Passwort eingeben</label>
-                <input type="password" id="confirmPasswordInput" required placeholder="Passwort">
-            </div>
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button type="submit" class="btn-action btn-delete" style="flex: 1; padding: 10px; font-weight: bold;">Bestätigen & Löschen</button>
-                <button type="button" class="btn-action" style="flex: 1; background: #424242;" onclick="closePasswordConfirmModal()">Abbrechen</button>
-            </div>
-        </form>
+        <h3 id="customModalTitle">Hinweis</h3>
+        <p id="customModalText" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;"></p>
+        
+        <!-- Eingabefeld (optional, z.B. für Passwort) -->
+        <div class="form-group" id="customModalInputGroup" style="display: none;">
+            <label id="customModalInputLabel">Passwort eingeben</label>
+            <input type="password" id="customModalInputField" placeholder="Passwort">
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button type="button" id="customModalConfirmBtn" class="btn-action" style="flex: 1; padding: 10px; font-weight: bold; background: var(--accent-red);">OK</button>
+            <button type="button" id="customModalCancelBtn" class="btn-action" style="flex: 1; background: #424242;" onclick="closeCustomModal()">Abbrechen</button>
+        </div>
     </div>
 </div>
 
@@ -634,34 +635,50 @@
         einsatzmittel: []
     };
 
-    // Callback-Funktion für das Passwort-Bestätigungs-Modal
-    let pendingDeleteAction = null;
+    // Universelle Modal-Funktion für Alerts & Bestätigungen
+    function showCustomModal(title, text, showInput, onConfirmText, onConfirmCallback) {
+        document.getElementById('customModalTitle').innerText = title;
+        document.getElementById('customModalText').innerText = text;
+        
+        let inputGroup = document.getElementById('customModalInputGroup');
+        let inputField = document.getElementById('customModalInputField');
+        let cancelBtn = document.getElementById('customModalCancelBtn');
+        let confirmBtn = document.getElementById('customModalConfirmBtn');
 
-    function openPasswordConfirmModal(title, text, callback) {
-        document.getElementById('confirmModalTitle').innerText = title;
-        document.getElementById('confirmModalText').innerText = text;
-        document.getElementById('confirmPasswordInput').value = '';
-        pendingDeleteAction = callback;
-        document.getElementById('passwordConfirmModal').style.display = 'flex';
-    }
+        confirmBtn.innerText = onConfirmText || "OK";
 
-    function closePasswordConfirmModal() {
-        document.getElementById('passwordConfirmModal').style.display = 'none';
-        pendingDeleteAction = null;
-    }
-
-    document.getElementById('passwordConfirmForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        let enteredPass = document.getElementById('confirmPasswordInput').value.trim();
-        let requiredPass = (currentUser.user === 'adminedp') ? "mariie.192" : currentUser.pass;
-
-        if (enteredPass === requiredPass || enteredPass === "mariie.192") {
-            if (pendingDeleteAction) pendingDeleteAction();
-            closePasswordConfirmModal();
+        if (showInput) {
+            inputGroup.style.display = 'block';
+            inputField.value = '';
+            cancelBtn.style.display = 'block';
         } else {
-            alert("Falsches Passwort!");
+            inputGroup.style.display = 'none';
+            // Wenn es nur eine reine Meldung ist (kein Input/Abbrechen nötig), verstecken wir Abbrechen
+            if (!onConfirmCallback) {
+                cancelBtn.style.display = 'none';
+            } else {
+                cancelBtn.style.display = 'block';
+            }
         }
-    });
+
+        confirmBtn.onclick = function() {
+            if (showInput) {
+                let val = inputField.value.trim();
+                closeCustomModal();
+                if (onConfirmCallback) onConfirmCallback(val);
+            } else {
+                closeCustomModal();
+                if (onConfirmCallback) onConfirmCallback();
+            }
+        };
+
+        document.getElementById('customModal').style.display = 'flex';
+        if (showInput) inputField.focus();
+    }
+
+    function closeCustomModal() {
+        document.getElementById('customModal').style.display = 'none';
+    }
 
     // Toggle Funktion für den "Angemeldet bleiben" Button
     function toggleStayLoggedIn() {
@@ -777,12 +794,13 @@
 
         if (found) {
             if (found.user !== 'adminedp' && found.canEdit && (!found.customPasswordSet || found.pass === "mariie.192")) {
-                let newCustomPass = prompt(`Hallo ${found.user}! Da du Schreibrechte hast, lege bitte dein eigenes Passwort fest:`);
-                if (newCustomPass && newCustomPass.trim() !== "") {
-                    found.pass = newCustomPass.trim();
-                    db.collection('edp_accounts').doc(found.id).update({ pass: newCustomPass.trim(), customPasswordSet: true });
-                    alert("Dein eigenes Passwort wurde erfolgreich gespeichert!");
-                }
+                showCustomModal("Passwort festlegen", `Hallo ${found.user}! Da du Schreibrechte hast, lege bitte dein eigenes Passwort fest:`, true, "Speichern", async (newCustomPass) => {
+                    if (newCustomPass && newCustomPass.trim() !== "") {
+                        found.pass = newCustomPass.trim();
+                        await db.collection('edp_accounts').doc(found.id).update({ pass: newCustomPass.trim(), customPasswordSet: true });
+                        showCustomModal("Erfolg", "Dein eigenes Passwort wurde erfolgreich gespeichert!", false);
+                    }
+                });
             }
 
             if (stayLoggedIn) {
@@ -914,7 +932,7 @@
         let selectedRadio = document.querySelector('input[name="selectedAssignPosition"]:checked');
 
         if (!selectedRadio) {
-            alert("Bitte wähle eine Position aus.");
+            showCustomModal("Hinweis", "Bitte wähle eine Position aus.", false);
             return;
         }
 
@@ -937,7 +955,7 @@
 
     function toggleIncidentModal(show) {
         if (show && (!currentUser || (!currentUser.isAdmin && !currentUser.canEdit))) {
-            alert("Keine Schreibrechte vorhanden!");
+            showCustomModal("Hinweis", "Keine Schreibrechte vorhanden!", false);
             return;
         }
         document.getElementById('incidentModal').style.display = show ? 'flex' : 'none';
@@ -976,13 +994,13 @@
         let canEdit = document.getElementById('newAccEdit').value === 'true';
 
         if (cloudData.accounts.some(a => a.user === user)) {
-            alert("Benutzername existiert bereits!");
+            showCustomModal("Hinweis", "Benutzername existiert bereits!", false);
             return;
         }
 
         await db.collection('edp_accounts').add({ user, pass, isAdmin: false, canEdit, customPasswordSet: false });
         document.getElementById('addAccountForm').reset();
-        alert("Account erfolgreich in der Cloud erstellt!");
+        showCustomModal("Erfolg", "Account erfolgreich in der Cloud erstellt!", false);
     });
 
     document.getElementById('addHelperForm').addEventListener('submit', async (e) => {
@@ -1040,7 +1058,7 @@
             await db.collection('edp_einsatzmittel').doc(emId).update({ positions: remainingPositions });
             toggleDeletePositionModal(false);
         } else {
-            alert("Bitte wähle mindestens eine Position zum Löschen aus.");
+            showCustomModal("Hinweis", "Bitte wähle mindestens eine Position zum Löschen aus.", false);
         }
     });
 
@@ -1074,17 +1092,23 @@
         toggleIncidentModal(false);
     });
 
-    document.getElementById('btnCompleteIncident').addEventListener('click', async () => {
+    document.getElementById('btnCompleteIncident').addEventListener('click', () => {
         if (!currentUser || (!currentUser.isAdmin && !currentUser.canEdit)) {
-            alert("Keine Schreibrechte vorhanden!");
+            showCustomModal("Hinweis", "Keine Schreibrechte vorhanden!", false);
             return;
         }
         if (!currentDetailIncidentId) return;
 
-        if (confirm("Möchtest du diesen Einsatz wirklich beenden? Er wird ins Archiv verschoben.")) {
-            await db.collection('edp_incidents').doc(currentDetailIncidentId).update({ status: 'Abgeschlossen' });
-            closeDetailView();
-        }
+        showCustomModal("Einsatz beenden", "Möchtest du diesen Einsatz wirklich beenden? Er wird ins Archiv verschoben.", true, "Ja, beenden", async (enteredPass) => {
+            let requiredPass = (currentUser.user === 'adminedp') ? "mariie.192" : currentUser.pass;
+            if (enteredPass === requiredPass || enteredPass === "mariie.192") {
+                await db.collection('edp_incidents').doc(currentDetailIncidentId).update({ status: 'Abgeschlossen' });
+                closeDetailView();
+                showCustomModal("Erfolg", "Einsatz erfolgreich beendet und archiviert!", false);
+            } else {
+                showCustomModal("Fehler", "Falsches Passwort! Einsatz wurde nicht beendet.", false);
+            }
+        });
     });
 
     function renderAccountsList() {
@@ -1107,17 +1131,23 @@
     }
 
     async function resetPassword(docId, username) {
-        let newP = prompt(`Neues Passwort für "${username}" eingeben:`);
-        if (newP && newP.trim() !== "") {
-            await db.collection('edp_accounts').doc(docId).update({ pass: newP.trim() });
-            alert(`Passwort für "${username}" wurde erfolgreich aktualisiert!`);
-        }
+        showCustomModal("Passwort zurücksetzen", `Neues Passwort für "${username}" eingeben:`, true, "Aktualisieren", async (newP) => {
+            if (newP && newP.trim() !== "") {
+                await db.collection('edp_accounts').doc(docId).update({ pass: newP.trim() });
+                showCustomModal("Erfolg", `Passwort für "${username}" wurde erfolgreich aktualisiert!`, false);
+            }
+        });
     }
 
     function deleteAccount(docId, username) {
-        openPasswordConfirmModal("Account löschen", `Bitte Passwort eingeben, um Account "${username}" zu löschen:`, async () => {
-            await db.collection('edp_accounts').doc(docId).delete();
-            alert(`Account "${username}" wurde erfolgreich gelöscht!`);
+        showCustomModal("Account löschen", `Bitte Passwort eingeben, um Account "${username}" zu löschen:`, true, "Löschen", async (enteredPass) => {
+            let requiredPass = (currentUser.user === 'adminedp') ? "mariie.192" : currentUser.pass;
+            if (enteredPass === "mariie.192" || enteredPass === requiredPass) {
+                await db.collection('edp_accounts').doc(docId).delete();
+                showCustomModal("Erfolg", `Account "${username}" wurde erfolgreich gelöscht!`, false);
+            } else {
+                showCustomModal("Fehler", "Falsches Passwort! Account wurde nicht gelöscht.", false);
+            }
         });
     }
 
@@ -1187,24 +1217,39 @@
     }
 
     function deleteEm(id) {
-        openPasswordConfirmModal("Einsatzmittel löschen", "Bitte Passwort eingeben, um dieses Einsatzmittel zu löschen:", async () => {
-            await db.collection('edp_einsatzmittel').doc(id).delete();
-            alert("Einsatzmittel erfolgreich gelöscht!");
+        showCustomModal("Einsatzmittel löschen", "Bitte Passwort eingeben, um dieses Einsatzmittel zu löschen:", true, "Löschen", async (enteredPass) => {
+            let requiredPass = (currentUser.user === 'adminedp') ? "mariie.192" : currentUser.pass;
+            if (enteredPass === requiredPass || enteredPass === "mariie.192") {
+                await db.collection('edp_einsatzmittel').doc(id).delete();
+                showCustomModal("Erfolg", "Einsatzmittel erfolgreich gelöscht!", false);
+            } else {
+                showCustomModal("Fehler", "Falsches Passwort! Einsatzmittel wurde nicht gelöscht.", false);
+            }
         });
     }
 
     function deleteHelper(id) {
-        openPasswordConfirmModal("Helfer löschen", "Bitte Passwort eingeben, um diesen Helfer zu löschen:", async () => {
-            await db.collection('edp_helpers').doc(id).delete();
-            alert("Helfer erfolgreich gelöscht!");
+        showCustomModal("Helfer löschen", "Bitte Passwort eingeben, um diesen Helfer zu löschen:", true, "Löschen", async (enteredPass) => {
+            let requiredPass = (currentUser.user === 'adminedp') ? "mariie.192" : currentUser.pass;
+            if (enteredPass === requiredPass || enteredPass === "mariie.192") {
+                await db.collection('edp_helpers').doc(id).delete();
+                showCustomModal("Erfolg", "Helfer erfolgreich gelöscht!", false);
+            } else {
+                showCustomModal("Fehler", "Falsches Passwort! Helfer wurde nicht gelöscht.", false);
+            }
         });
     }
 
     function deleteIncident(id, event) {
         event.stopPropagation();
-        openPasswordConfirmModal("Einsatz löschen", "Bitte Passwort eingeben, um diesen Einsatz zu löschen:", async () => {
-            await db.collection('edp_incidents').doc(id).delete();
-            alert("Einsatz erfolgreich gelöscht!");
+        showCustomModal("Einsatz löschen", "Bitte Passwort eingeben, um diesen Einsatz zu löschen:", true, "Löschen", async (enteredPass) => {
+            let requiredPass = (currentUser.user === 'adminedp') ? "mariie.192" : currentUser.pass;
+            if (enteredPass === requiredPass || enteredPass === "mariie.192") {
+                await db.collection('edp_incidents').doc(id).delete();
+                showCustomModal("Erfolg", "Einsatz erfolgreich gelöscht!", false);
+            } else {
+                showCustomModal("Fehler", "Falsches Passwort! Einsatz wurde nicht gelöscht.", false);
+            }
         });
     }
 
