@@ -3,11 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EDP-Light // JF Einsatzleitung</title>
-
-    <!-- Browser-Tab & iPad / Tablet App-Icon (Hellroter Hintergrund) -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23ff6b6b'/><g transform='translate(8, 8)'><rect x='2' y='2' width='36' height='26' rx='4' stroke='%23ffffff' stroke-width='3' fill='%23121212'/><path d='M15 34H25' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'/><path d='M20 28V34' stroke='%23ffffff' stroke-width='3'/><path d='M20 10C20 10 14 15 14 18.5C14 20.9853 16.0147 23 18.5 23C20.9853 23 23 20.9853 23 18.5C23 15 20 10 20 10Z' fill='%23d32f2f'/><circle cx='20' cy='18' r='2.5' fill='%23ffffff'/></g>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%23ff6b6b'/><g transform='translate(8, 8)'><rect x='2' y='2' width='36' height='26' rx='4' stroke='%23ffffff' stroke-width='3' fill='%23121212'/><path d='M15 34H25' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'/><path d='M20 28V34' stroke='%23ffffff' stroke-width='3'/><path d='M20 10C20 10 14 15 14 18.5C14 20.9853 16.0147 23 18.5 23C20.9853 23 23 20.9853 23 18.5C23 15 20 10 20 10Z' fill='%23d32f2f'/><circle cx='20' cy='18' r='2.5' fill='%23ffffff'/></g>">
+    <title>EDP-Light // Startseite - Feuerwehr</title>
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -15,628 +11,585 @@
 
     <style>
         :root {
-            --bg-color: #121212;
-            --panel-bg: #1e1e1e;
+            --bg-color: #1a1a1a;
+            --panel-bg: #282828;
+            --card-bg: #3a3a3a;
+            --card-hover: #4a4a4a;
             --accent-red: #d32f2f;
             --accent-orange: #f57c00;
             --accent-green: #388e3c;
             --accent-blue: #1976d2;
-            --accent-purple: #7b1fa2;
-            --accent-teal: #00897b;
-            --accent-brown: #6d4c41;
             --text-color: #e0e0e0;
-            --text-muted: #9e9e9e;
-            --border-color: #333;
+            --text-muted: #aaa;
+            --border-color: #3f3f3f;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-color); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* LOGIN SCREEN */
+        /* Login */
         #loginScreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(18, 18, 18, 0.95);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #121212; display: flex; justify-content: center; align-items: center; z-index: 9999;
         }
-
         .login-box {
-            background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            padding: 30px;
-            border-radius: 8px;
-            width: 350px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.7);
+            background: var(--panel-bg); padding: 30px; border-radius: 8px; width: 350px; border: 1px solid var(--border-color);
         }
-
-        .login-box h2 {
-            margin-bottom: 20px;
-            font-size: 1.3rem;
+        .login-box h2 { color: #fff; margin-bottom: 20px; text-align: center; border-bottom: 2px solid var(--accent-red); padding-bottom: 10px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; }
+        
+        /* Angemeldet bleiben Toggle Button */
+        .toggle-btn {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
             text-align: center;
-            border-bottom: 2px solid var(--accent-red);
-            padding-bottom: 10px;
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .toggle-btn.no {
+            background: #333;
+            color: #fff;
+            border-color: #555;
+        }
+        .toggle-btn.no:hover {
+            background: #3a3a3a;
+        }
+        .toggle-btn.yes {
+            background: var(--accent-green);
+            color: #fff;
+            border-color: #4caf50;
+        }
+        .toggle-btn.yes:hover {
+            background: #2e7d32;
         }
 
-        /* HEADER */
-        header {
-            background-color: #000;
-            border-bottom: 3px solid var(--accent-red);
-            padding: 8px 20px;
+        .login-btn { background: var(--accent-red); color: white; border: none; padding: 8px; width: 100%; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px; }
+        .login-btn:hover { background: #b71c1c; }
+
+        /* Header */
+        header { background: #111; border-bottom: 1px solid #333; padding: 6px 16px; display: flex; justify-content: space-between; align-items: center; height: 48px; }
+        .logo-area { display: flex; align-items: center; gap: 10px; }
+        .logo-area h1 { font-size: 1.1rem; letter-spacing: 1px; text-transform: uppercase; color: #fff; }
+        .logo-area span { color: var(--accent-red); }
+        .search-bar input { padding: 5px 10px; background: #252525; border: 1px solid #444; border-radius: 4px; color: #fff; width: 280px; }
+        .nav-right { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
+        .btn-action { background: #424242; width: auto; padding: 4px 10px; font-size: 0.75rem; cursor: pointer; border: none; color: white; border-radius: 4px; }
+        .btn-action:hover { background: #555; }
+        .btn-logout { background: var(--accent-red); }
+        .btn-logout:hover { background: #b71c1c; }
+        .btn-delete { background: var(--accent-red); }
+        .btn-delete:hover { background: #8e0000; }
+
+        /* Dashboard */
+        #dashboardView { display: none; padding: 20px 30px; flex: 1; }
+        .page-title { font-size: 1.25rem; font-weight: bold; margin-bottom: 20px; color: #fff; }
+        .section-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 12px; color: #fff; }
+        .dashboard-section { margin-bottom: 25px; }
+        .tiles-grid { display: flex; gap: 12px; flex-wrap: wrap; }
+        .tile {
+            background: var(--card-bg); border: 1px solid #4f4f4f; border-radius: 6px; width: 105px; height: 95px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; position: relative; text-align: center; padding: 6px;
+        }
+        .tile:hover { background: var(--card-hover); }
+        .tile.active-red { background: #b71c1c; border-color: #e53935; }
+        .tile .badge-count { position: absolute; top: 6px; right: 10px; font-size: 0.75rem; font-weight: bold; color: #fff; }
+        .tile svg { width: 26px; height: 26px; fill: #fff; margin-bottom: 6px; }
+        .tile span { font-size: 0.72rem; color: #fff; }
+
+        /* Einsätze */
+        .einsaetze-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .btn-new-incident { background-color: var(--accent-red); color: white; border: none; padding: 6px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; width: auto; }
+        .btn-new-incident:hover { background-color: #b71c1c; }
+        .accordion-item { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 4px; overflow: hidden; }
+        .accordion-header { padding: 10px 14px; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; background: #232323; }
+        .accordion-counter { background: #111; border: 1px solid #444; padding: 1px 6px; border-radius: 3px; font-size: 0.75rem; }
+        .empty-notice { padding: 12px 14px; color: var(--text-muted); font-size: 0.85rem; font-style: italic; }
+
+        /* Modals */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; }
+        .modal-content { background: var(--panel-bg); border: 1px solid var(--border-color); padding: 25px; border-radius: 8px; width: 550px; max-width: 95%; max-height: 90vh; overflow-y: auto; overflow-x: hidden; }
+        .modal-content h3 { color: var(--accent-orange); margin-bottom: 15px; font-size: 1rem; border-bottom: 1px solid #333; padding-bottom: 8px; }
+        .admin-row { background: #1a1a1a; border: 1px solid #333; padding: 8px 12px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem; }
+        .badge-admin { background: var(--accent-red); padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; color: #fff; font-weight: bold; }
+
+        /* Style für auswählbare Positionen mit grünem Hintergrund */
+        .pos-select-label {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            flex-shrink: 0;
-            height: 50px;
-        }
-
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo-area h1 {
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .logo-area span {
-            color: var(--accent-red);
-        }
-
-        .header-right {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .clock {
-            font-family: monospace;
-            font-size: 1.1rem;
+            gap: 12px;
             background: #222;
-            padding: 4px 8px;
-            border-radius: 4px;
-            border: 1px solid var(--border-color);
-        }
-
-        /* APP LAYOUT GRID - Fester Viewport ohne rauszoomen */
-        .app-container {
-            display: none;
-            grid-template-columns: 320px 1fr 380px;
-            gap: 10px;
-            padding: 10px;
-            flex: 1;
-            height: calc(100vh - 50px);
-            overflow: hidden;
-        }
-
-        .column-left, .column-right {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            height: 100%;
-            min-height: 0;
-        }
-
-        panel {
-            background-color: var(--panel-bg);
-            border: 1px solid var(--border-color);
+            border: 1px solid #444;
+            padding: 10px 14px;
             border-radius: 6px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            min-height: 0; /* Wichtig für Flexbox-Verhalten in Containern */
-        }
-
-        .panel-header {
-            background-color: #252525;
-            padding: 8px 12px;
-            font-weight: bold;
-            font-size: 0.85rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-        }
-
-        .panel-body {
-            padding: 10px;
-            overflow-y: auto;
-            flex: 1;
-            font-size: 0.85rem;
-            min-height: 0;
-        }
-
-        /* FORMULARE & BUTTONS */
-        .form-group {
-            margin-bottom: 8px;
-        }
-
-        label {
-            display: block;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-bottom: 2px;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            padding: 5px;
-            background: #2a2a2a;
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            border-radius: 4px;
-            font-size: 0.85rem;
-        }
-
-        input:disabled, select:disabled, textarea:disabled {
-            background: #181818;
-            color: #555;
-            cursor: not-allowed;
-        }
-
-        button {
-            background-color: var(--accent-red);
-            color: white;
-            border: none;
-            padding: 6px 10px;
-            border-radius: 4px;
             cursor: pointer;
+            user-select: none;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+        .pos-select-label:has(input:checked) {
+            background: #2e7d32 !important;
+            border-color: #4caf50 !important;
+            color: #ffffff !important;
             font-weight: bold;
-            width: 100%;
-            transition: background 0.2s;
-            font-size: 0.85rem;
-            flex-shrink: 0;
         }
-
-        button:hover { background-color: #b71c1c; }
-        button:disabled { background-color: #333 !important; color: #666 !important; cursor: not-allowed; }
-        button.secondary { background-color: #424242; }
-        button.secondary:hover { background-color: #616161; }
-        button.blue { background-color: var(--accent-blue); }
-        button.blue:hover { background-color: #115293; }
-
-        /* TABELLE */
-        .incident-list-panel {
-            height: 100%;
-            min-height: 0;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.8rem;
-            text-align: left;
-        }
-
-        th, td {
-            padding: 6px 8px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        th {
-            background-color: #252525;
-            color: var(--text-muted);
-            position: sticky;
-            top: 0;
-            z-index: 2;
-        }
-
-        tr:hover {
-            background-color: #2a2a2a;
+        .pos-select-label input[type="radio"], .pos-select-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
             cursor: pointer;
+            accent-color: #4caf50;
         }
 
-        tr.selected {
-            background-color: #333;
-            border-left: 4px solid var(--accent-red);
-        }
+        /* Andere Ansichten / Apps */
+        #appContainer, #helperView, #detailView, #archiveView, #incidentHelperView, #emView, #monitorView { display: none; padding: 20px 30px; flex: 1; }
+        .sub-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-primary { background-color: var(--accent-red); color: white; border: none; padding: 8px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; }
+        .btn-primary:hover { background-color: #b71c1c; }
+        .helper-card { background: var(--panel-bg); border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Positions-Boxen unter dem Funkrufnamen */
+        .em-positions-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .em-position-box { background: #1e1e1e; border: 1px solid #444; border-radius: 4px; padding: 4px 8px; font-size: 0.8rem; color: var(--accent-orange); font-weight: bold; }
 
-        /* BADGES */
-        .badge {
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-size: 0.7rem;
-            font-weight: bold;
-        }
-        .badge-neu { background: var(--accent-red); color: white; }
-        .badge-aktiv { background: var(--accent-orange); color: black; }
-        .badge-fertig { background: var(--accent-green); color: white; }
-        .badge-jf { background: var(--accent-blue); color: white; }
-        .badge-betreuer { background: var(--accent-purple); color: white; }
-        .badge-gast { background: var(--accent-teal); color: white; }
-        .badge-helfer { background: var(--accent-brown); color: white; }
-        .badge-admin { background: var(--accent-red); color: white; }
+        /* Einsatz Detail Layout */
+        .detail-layout { display: flex; gap: 20px; height: calc(100vh - 120px); }
+        .detail-left { width: 45%; display: flex; flex-direction: column; gap: 15px; }
+        .detail-right { width: 55%; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
+        .detail-card { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; }
+        .detail-top-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 12px; }
+        .detail-title { font-size: 1.4rem; font-weight: bold; color: #fff; }
+        .detail-number { font-family: monospace; font-size: 1.1rem; color: var(--text-muted); }
+        .detail-address { font-size: 0.95rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .detail-desc { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .detail-btn-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
+        .custom-btn { background: #333; border: 1px solid #555; color: #fff; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 6px; text-decoration: none; }
+        .custom-btn:hover { background: #444; }
+        .custom-btn.btn-red-text { color: #e57373; border-color: #552222; }
 
-        .item-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 5px 6px;
-            border-bottom: 1px solid #2a2a2a;
-            font-size: 0.8rem;
-        }
-
-        .log-entry {
-            font-size: 0.75rem;
-            margin-bottom: 4px;
-            border-left: 2px solid var(--text-muted);
-            padding-left: 5px;
-        }
-        .log-time { color: var(--text-muted); font-family: monospace; }
-
-        /* MODALS */
-        .custom-modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            z-index: 500;
-            justify-content: center;
-            align-items: center;
-        }
-        .modal-content {
-            background: var(--panel-bg);
-            border: 1px solid var(--border-color);
-            width: 750px;
-            max-height: 85vh;
-            border-radius: 6px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .modal-body {
-            padding: 15px;
-            overflow-y: auto;
-        }
-        .admin-section {
-            margin-bottom: 20px;
-            background: #252525;
-            padding: 10px;
-            border-radius: 4px;
-        }
-        .admin-section h3 {
-            font-size: 0.9rem;
-            margin-bottom: 8px;
-            color: var(--accent-orange);
-            border-bottom: 1px solid #333;
-            padding-bottom: 4px;
-        }
-
-        /* MOBILE & TABLET ANPASSUNGEN */
-        @media (max-width: 1024px) {
-            body {
-                overflow: auto;
-                height: auto;
-            }
-
-            .app-container {
-                display: flex !important;
-                flex-direction: column !important;
-                height: auto !important;
-                overflow: visible !important;
-                padding: 5px;
-                gap: 15px;
-            }
-
-            .column-left, .column-right {
-                width: 100% !important;
-                height: auto !important;
-            }
-
-            panel {
-                height: auto !important;
-                min-height: 220px;
-            }
-
-            header {
-                height: auto;
-                flex-direction: column;
-                gap: 8px;
-                align-items: stretch;
-            }
-
-            .header-right {
-                justify-content: space-between;
-                flex-wrap: wrap;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .login-box {
-                width: 90% !important;
-                padding: 15px;
-            }
-            
-            .logo-area h1 {
-                font-size: 0.9rem;
-            }
-
-            button {
-                padding: 10px;
-                font-size: 0.9rem;
-            }
-
-            input, select, textarea {
-                font-size: 16px !important;
-            }
-        }
+        /* Monitor Ansicht Layout (Karte kleiner: width: 30%) */
+        .monitor-layout { display: flex; height: calc(100vh - 80px); background: #262626; color: #fff; position: relative; }
+        .monitor-left { flex: 1; padding: 20px 40px 40px 40px; display: flex; flex-direction: column; justify-content: space-between; overflow-y: auto; }
+        .monitor-right { width: 30%; background: #333; position: relative; border-left: 1px solid #444; }
+        .monitor-header-bar { display: flex; align-items: center; margin-bottom: 15px; }
+        .monitor-stichwort-text { font-size: 3.8rem; font-weight: bold; letter-spacing: 2px; color: #ffffff; border-left: 6px solid #ffffff; padding-left: 15px; line-height: 1; }
+        .monitor-beschreibung { font-size: 2.2rem; font-style: italic; color: #ccc; margin-top: 15px; }
+        .monitor-address-block { margin: 30px 0; }
+        .monitor-address-line { font-size: 2.8rem; font-weight: 300; line-height: 1.2; }
+        .monitor-vehicles-row { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 20px; }
+        .monitor-vehicle-box { background: #1e1e1e; border: 1px solid #444; padding: 12px 24px; border-radius: 4px; font-size: 1.5rem; font-weight: bold; color: #fff; }
+        .monitor-back-btn { background: #424242; color: #fff; border: 1px solid #555; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; margin-bottom: 15px; align-self: flex-start; }
+        .monitor-back-btn:hover { background: #555; }
     </style>
 </head>
 <body>
 
-<!-- LOGIN BILDSCHIRM -->
+<!-- Login -->
 <div id="loginScreen">
     <div class="login-box">
-        <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px;">
-            <svg width="36" height="36" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#ff6b6b"/><g transform="translate(8, 8)"><rect x="2" y="2" width="36" height="26" rx="4" stroke="#ffffff" stroke-width="3" fill="#121212"/><path d="M15 34H25" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/><path d="M20 28V34" stroke="#ffffff" stroke-width="3"/><path d="M20 10C20 10 14 15 14 18.5C14 20.9853 16.0147 23 18.5 23C20.9853 23 23 20.9853 23 18.5C23 15 20 10 20 10Z" fill="#d32f2f"/><circle cx="20" cy="18" r="2.5" fill="#ffffff"/></g></svg>
-            <h2 style="margin:0; border:none; padding:0;">EDP-Light</h2>
-        </div>
+        <h2>EDP-Light Login</h2>
         <form id="loginForm">
             <div class="form-group">
                 <label>Benutzername</label>
-                <input type="text" id="loginUser" required placeholder="z.B. adminedp">
+                <input type="text" id="userInput" required placeholder="Benutzername">
             </div>
             <div class="form-group">
                 <label>Passwort</label>
-                <input type="password" id="loginPass" required placeholder="Passwort">
+                <input type="password" id="passInput" required placeholder="Passwort">
             </div>
-            <div class="form-group" style="margin-top: 10px;">
+            <div class="form-group">
                 <label>Angemeldet bleiben</label>
-                <button type="button" id="stayLoggedInBtn" class="secondary" onclick="toggleStayLoggedIn()" style="background-color: #424242;">Nein</button>
+                <button type="button" id="stayLoggedInToggle" class="toggle-btn no" onclick="toggleStayLoggedIn()">Nein</button>
             </div>
-            <button type="submit" style="margin-top: 10px;">Anmelden</button>
+            <button type="submit" class="login-btn">Anmelden</button>
         </form>
-        <p id="loginError" style="color: var(--accent-red); font-size: 0.75rem; margin-top: 10px; text-align: center;"></p>
+        <p id="loginErr" style="color: var(--accent-red); font-size: 0.75rem; margin-top: 10px; text-align: center;"></p>
     </div>
 </div>
 
-<!-- ADMIN / VERWALTUNGS-PANEL MODAL -->
-<div id="adminModal" class="custom-modal">
+<!-- Modal: Verwaltung -->
+<div id="adminModal" class="modal">
     <div class="modal-content">
-        <div class="panel-header">
-            <span id="modalHeaderTitle">Verwaltung</span>
-            <button class="secondary" style="width: auto; padding: 2px 6px;" onclick="toggleAdminModal(false)">Schließen</button>
-        </div>
-        <div class="modal-body">
-            <div class="admin-section">
-                <h3>Alarmstichworte verwalten</h3>
-                <form id="addKeywordForm" style="display: flex; gap: 8px; margin-bottom: 8px;">
-                    <input type="text" id="newKeyName" placeholder="Neues Stichwort" required style="flex: 2;">
-                    <button type="submit" style="flex: 1;">Hinzufügen</button>
-                </form>
-                <div id="adminKeywordList" style="max-height: 120px; overflow-y: auto;"></div>
+        <h3>Benutzer-Accounts verwalten & anlegen</h3>
+        <form id="addAccountForm">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                <input type="text" id="newAccUser" placeholder="Benutzername" required style="padding: 6px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.85rem; width: 100%;">
+                <input type="password" id="newAccPass" placeholder="Passwort" required style="padding: 6px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.85rem; width: 100%;">
+                <select id="newAccEdit" style="padding: 6px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.85rem; width: 100%;">
+                    <option value="true">Schreibrecht: Ja</option>
+                    <option value="false">Schreibrecht: Nein</option>
+                </select>
             </div>
+            <button type="submit" style="background: var(--accent-red); color: white; border: none; padding: 8px; width: 100%; font-weight: bold; border-radius: 4px; cursor: pointer; margin-bottom: 20px;">Account erstellen</button>
+        </form>
 
-            <div class="admin-section" id="accountManagementSection" style="display: none;">
-                <h3>Benutzer-Accounts verwalten & anlegen</h3>
-                <form id="addAccountForm" style="margin-bottom: 12px;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 6px;">
-                        <input type="text" id="accUser" placeholder="Benutzername" required>
-                        <input type="password" id="accPass" placeholder="Passwort" required>
-                        <select id="accCanEdit">
-                            <option value="true">Schreibrecht: Ja</option>
-                            <option value="false">Schreibrecht: Nein</option>
-                        </select>
-                    </div>
-                    <button type="submit">Account erstellen</button>
-                </form>
-                <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Vorhandene Accounts:</div>
-                <div id="adminAccountList" style="max-height: 140px; overflow-y: auto; background: #1a1a1a; border: 1px solid var(--border-color); border-radius: 4px; padding: 4px;"></div>
-            </div>
-        </div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">Vorhandene Accounts:</div>
+        <div id="accountListContainer"></div>
+
+        <button onclick="toggleAdminModal(false)" style="margin-top: 20px; background: #424242; color: white; border: none; padding: 8px; width: 100%; border-radius: 4px; cursor: pointer;">Schließen</button>
     </div>
 </div>
 
-<!-- PASSWORT ÄNDERN MODAL -->
-<div id="changePasswordModal" class="custom-modal">
-    <div class="modal-content" style="width: 400px;">
-        <div class="panel-header">
-            <span>Eigenes Passwort ändern</span>
-            <button class="secondary" style="width: auto; padding: 2px 6px;" onclick="togglePasswordModal(false)">Schließen</button>
-        </div>
-        <div class="modal-body">
-            <form id="changePasswordForm">
-                <div class="form-group">
-                    <label>Altes Passwort</label>
-                    <input type="password" id="oldPassInput" required placeholder="Bisheriges Passwort">
-                </div>
-                <div class="form-group">
-                    <label>Neues Passwort</label>
-                    <input type="password" id="newPassInput" required placeholder="Neues Passwort">
-                </div>
-                <div class="form-group">
-                    <label>Neues Passwort bestätigen</label>
-                    <input type="password" id="newPassConfirmInput" required placeholder="Neues Passwort wiederholen">
-                </div>
-                <button type="submit" style="margin-top: 10px;">Passwort speichern</button>
-            </form>
-            <p id="changePassError" style="color: var(--accent-red); font-size: 0.75rem; margin-top: 8px; text-align: center;"></p>
-        </div>
+<!-- Modal: Helfer erstellen -->
+<div id="helperModal" class="modal">
+    <div class="modal-content">
+        <h3>Neuen Helfer erstellen</h3>
+        <form id="addHelperForm">
+            <div class="form-group">
+                <label>Nachname</label>
+                <input type="text" id="helperNachname" required placeholder="Nachname">
+            </div>
+            <div class="form-group">
+                <label>Vorname</label>
+                <input type="text" id="helperVorname" required placeholder="Vorname">
+            </div>
+            <div class="form-group">
+                <label>Rolle</label>
+                <input type="text" id="helperRolle" required placeholder="Rolle">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn-primary" style="flex: 1;">Helfer erstellen</button>
+                <button type="button" class="btn-action" style="flex: 1; background: #424242;" onclick="toggleHelperModal(false)">Abbrechen</button>
+            </div>
+        </form>
     </div>
 </div>
 
-<!-- HAUPT-HEADER -->
+<!-- Modal: Einsatzmittel erstellen -->
+<div id="emModal" class="modal">
+    <div class="modal-content">
+        <h3>Neues Einsatzmittel erstellen</h3>
+        <form id="addEmForm">
+            <div class="form-group">
+                <label>Funkrufname</label>
+                <input type="text" id="emFunkrufname" required placeholder="Funkrufname">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn-primary" style="flex: 1;">Einsatzmittel erstellen</button>
+                <button type="button" class="btn-action" style="flex: 1; background: #424242;" onclick="toggleEmModal(false)">Abbrechen</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Position hinzufügen -->
+<div id="positionModal" class="modal">
+    <div class="modal-content">
+        <h3>Position hinzufügen</h3>
+        <form id="addPositionForm">
+            <input type="hidden" id="posEmId">
+            <div class="form-group">
+                <label>Positionsname</label>
+                <input type="text" id="posNameInput" required placeholder="Positionsname">
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn-primary" style="flex: 1;">Position speichern</button>
+                <button type="button" class="btn-action" style="flex: 1; background: #424242;" onclick="togglePositionModal(false)">Abbrechen</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Position löschen -->
+<div id="deletePositionModal" class="modal">
+    <div class="modal-content">
+        <h3>Position löschen</h3>
+        <form id="deletePositionForm">
+            <input type="hidden" id="delPosEmId">
+            <div class="form-group">
+                <label>Wähle die zu löschende(n) Position(en) aus:</label>
+                <div id="deletePositionRadioContainer" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px; max-height: 250px; overflow-y: auto;">
+                    <!-- Dynamische Checkboxes -->
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn-action btn-delete" style="flex: 1; padding: 10px; font-weight: bold;">Ausgewählte Position(en) löschen</button>
+                <button type="button" class="btn-action" style="flex: 1; background: #424242;" onclick="toggleDeletePositionModal(false)">Abbrechen</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Helfer zu Fahrzeug-Position zuordnen -->
+<div id="assignHelperModal" class="modal">
+    <div class="modal-content">
+        <h3 id="assignHelperModalTitle">Helfer zuordnen</h3>
+        <form id="assignHelperForm">
+            <input type="hidden" id="assignHelperId">
+            <div class="form-group">
+                <label>Wähle eine Position aus:</label>
+                <div id="assignPositionRadioContainer" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px; max-height: 250px; overflow-y: auto;">
+                    <!-- Dynamische Radio-Buttons mit Fahrzeugen & Positionen -->
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn-primary" style="flex: 1;">Zuordnen</button>
+                <button type="button" class="btn-action" style="flex: 1; background: #424242;" onclick="toggleAssignHelperModal(false)">Abbrechen</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Neuen Einsatz erstellen -->
+<div id="incidentModal" class="modal">
+    <div class="modal-content">
+        <h3>Neuen Einsatz anlegen</h3>
+        <form id="addIncidentForm">
+            <div class="form-group">
+                <label>Stichwort</label>
+                <input type="text" id="incStichwort" required placeholder="Stichwort">
+            </div>
+            <div class="form-group">
+                <label>Kurze Einsatzbeschreibung</label>
+                <textarea id="incBeschreibung" rows="3" required placeholder="Beschreibung"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Hausnummer</label>
+                <input type="text" id="incHausnummer" required placeholder="Hausnummer">
+            </div>
+            <div class="form-group">
+                <label>Straße</label>
+                <input type="text" id="incStrasse" required placeholder="Straße">
+            </div>
+            <div class="form-group">
+                <label>PLZ und Ort</label>
+                <input type="text" id="incPlzOrt" required placeholder="PLZ und Ort">
+            </div>
+            <div class="form-group">
+                <label>Fahrzeuge auswählen</label>
+                <div id="incidentEmCheckboxContainer" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto; background: #1e1e1e; padding: 8px; border-radius: 4px; border: 1px solid #444;">
+                    <!-- Dynamische Fahrzeug-Checkboxen -->
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn-primary" style="flex: 1;">Einsatz anlegen</button>
+                <button type="button" class="btn-action" style="flex: 1; background: #424242;" onclick="toggleIncidentModal(false)">Abbrechen</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Header -->
 <header>
     <div class="logo-area">
         <svg width="28" height="28" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#ff6b6b"/><g transform="translate(8, 8)"><rect x="2" y="2" width="36" height="26" rx="4" stroke="#ffffff" stroke-width="3" fill="#121212"/><path d="M15 34H25" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/><path d="M20 28V34" stroke="#ffffff" stroke-width="3"/><path d="M20 10C20 10 14 15 14 18.5C14 20.9853 16.0147 23 18.5 23C20.9853 23 23 20.9853 23 18.5C23 15 20 10 20 10Z" fill="#d32f2f"/><circle cx="20" cy="18" r="2.5" fill="#ffffff"/></g></svg>
-        <h1>EDP-Light // <span id="currentAreaLabel">Einsatzleitung</span></h1>
+        <h1>EDP-Light // <span>Jugendfeuerwehr</span></h1>
     </div>
-    <div class="header-right">
-        <span id="currentUserDisplay" style="font-size: 0.85rem; color: var(--text-muted);">Eingeloggt als: -</span>
-        <button class="secondary" style="width: auto; padding: 4px 8px; font-size: 0.75rem;" onclick="togglePasswordModal(true)">Passwort ändern</button>
-        <button id="adminBtn" class="blue" style="width: auto; padding: 4px 10px; display: none;" onclick="toggleAdminModal(true)">Verwaltung</button>
-        <div class="clock" id="liveClock">00:00:00</div>
-        <button class="secondary" style="width: auto; padding: 4px 10px;" onclick="logout()">Abmelden</button>
+    <div style="flex: 1; display: flex; justify-content: center;">
+        <div class="search-bar">
+            <input type="text" placeholder="Suchen">
+        </div>
+    </div>
+    <div class="nav-right">
+        <span id="currentUserDisplay" style="color: var(--text-muted); font-size: 0.85rem;">Eingeloggt: -</span>
+        <button id="adminBtn" class="btn-action" style="display: none;" onclick="toggleAdminModal(true)">Verwalten</button>
+        <button class="btn-action btn-logout" onclick="logout()">Abmelden</button>
     </div>
 </header>
 
-<!-- HAUPTANWENDUNG -->
-<div class="app-container" id="appContainer">
+<!-- Dashboard Ansicht -->
+<div id="dashboardView">
+    <div class="page-title">Startseite - Feuerwehr</div>
 
-    <!-- SPALTE 1 (Links) -->
-    <div class="column-left">
-        <panel style="flex: 1.2;">
-            <div class="panel-header">Vorfall erfassen</div>
-            <div class="panel-body">
-                <form id="incidentForm">
-                    <div class="form-group">
-                        <label>Stichwort</label>
-                        <select id="incType" required></select>
-                    </div>
-                    <div class="form-group">
-                        <label>Ort / PLZ / Adresse</label>
-                        <input type="text" id="incLocationText" placeholder="Ort / Adresse eingeben" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Sonderobjekt</label>
-                        <input type="text" id="incPatient" placeholder="Name / Objekt">
-                    </div>
-                    <div class="form-group">
-                        <label>Kurzbeschreibung / Lagemeldung</label>
-                        <textarea id="incDescription" rows="2" placeholder="Kurze Beschreibung des Einsatzes..."></textarea>
-                    </div>
-                    <button type="submit" id="btnCreateInc">Einsatz anlegen</button>
-                </form>
+    <div class="dashboard-section">
+        <div class="section-title">Einsatzbearbeitung</div>
+        <div class="tiles-grid">
+            <div class="tile active-red" onclick="openApp()">
+                <span class="badge-count" id="tileCount">0</span>
+                <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+                <span>Einsätze</span>
             </div>
-        </panel>
-
-        <panel style="flex: 1;">
-            <div class="panel-header">Anwesendes Personal</div>
-            <div class="panel-body" style="display: flex; flex-direction: column;">
-                <form id="addPersonForm" style="display: flex; gap: 5px; margin-bottom: 8px; flex-shrink: 0;">
-                    <input type="text" id="personName" placeholder="Name Einsatzkraft" required style="flex: 2;">
-                    <select id="personRole" style="flex: 1;">
-                        <option value="JF">JF</option>
-                        <option value="Betreuer">Betreuer</option>
-                        <option value="Gast">Gast</option>
-                        <option value="Helfer">Helfer</option>
-                    </select>
-                    <button type="submit" style="width: auto; padding: 4px 8px;">+</button>
-                </form>
-                <div id="personList" style="flex: 1; overflow-y: auto; min-height: 0;"></div>
+            <div class="tile" onclick="openEmView()">
+                <span class="badge-count" id="emTileCount">0</span>
+                <svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg>
+                <span>Einsatzmittel</span>
             </div>
-        </panel>
+            <div class="tile" onclick="openGlobalHelperView()">
+                <span class="badge-count" id="helperTileCount">0</span>
+                <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                <span>Helfererfassung</span>
+            </div>
+        </div>
     </div>
 
-    <!-- SPALTE 2: EINSATZLISTE (Mitte) -->
-    <panel class="incident-list-panel">
-        <div class="panel-header">
-            <span>Einsatz-Übersicht (Klicken zum Auswählen)</span>
-            <span id="permissionHint" style="font-size: 0.75rem; color: var(--accent-orange);"></span>
+    <div class="dashboard-section">
+        <div class="section-title">Informationen</div>
+        <div class="tiles-grid">
+            <div class="tile" onclick="openGoogleMaps()">
+                <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                <span>Google Maps</span>
+            </div>
+            <div class="tile" onclick="openArchiveView()">
+                <svg viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
+                <span>Archiv</span>
+            </div>
         </div>
-        <div class="panel-body" style="padding: 0;">
-            <table>
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Zeit</th>
-                    <th>Stichwort</th>
-                    <th>Ort</th>
-                    <th>Status</th>
-                </tr>
-                </thead>
-                <tbody id="incidentTableBody"></tbody>
-            </table>
-        </div>
-    </panel>
-
-    <!-- SPALTE 3 (Rechts) -->
-    <div class="column-right">
-        <panel style="flex: 1.1;">
-            <div class="panel-header">Einsatz-Details</div>
-            <div class="panel-body" id="detailPanel">
-                <p style="color: var(--text-muted); text-align: center; margin-top: 15px;">Wähle einen Einsatz aus.</p>
-            </div>
-        </panel>
-
-        <!-- FAHRZEUGE HINZUFÜGEN -->
-        <panel id="jfVehiclePanel" style="flex: 1;">
-            <div class="panel-header">Fahrzeuge verwalten</div>
-            <div class="panel-body" style="display: flex; flex-direction: column;">
-                <form id="addVehicleForm" style="display: flex; gap: 5px; margin-bottom: 6px; flex-shrink: 0;">
-                    <input type="text" id="vehType" placeholder="Typ (z.B. LF 10)" required style="flex: 1;">
-                    <input type="text" id="vehFunk" placeholder="Funkrufname" required style="flex: 1;">
-                    <button type="submit" style="width: auto; padding: 4px 8px;">Neu</button>
-                </form>
-                <div id="vehicleList" style="flex: 1; overflow-y: auto; min-height: 0;"></div>
-            </div>
-        </panel>
-
-        <!-- PERSONAL-ZUTEILUNG -->
-        <panel id="jfCrewPanel" style="flex: 1.3;">
-            <div class="panel-header">
-                <span>Personal-Zuteilung</span>
-                <span id="activeIncidentBadge" style="font-size: 0.7rem; background: #444; padding: 2px 5px; border-radius: 3px;">Kein Einsatz aktiv</span>
-            </div>
-            <div class="panel-body" style="display: flex; flex-direction: column;">
-                <form id="assignCrewForm" style="margin-bottom: 6px; flex-shrink: 0;">
-                    <div style="display: flex; gap: 5px; margin-bottom: 4px;">
-                        <select id="assignVehicle" required style="flex: 1;" disabled></select>
-                        <select id="assignPerson" required style="flex: 1;" disabled></select>
-                    </div>
-                    <div style="display: flex; gap: 5px;">
-                        <select id="assignPosition" required style="flex: 2;" disabled>
-                            <option value="">-- Position wählen --</option>
-                            <option value="Maschinist">Maschinist</option>
-                            <option value="Gruppenführer">Gruppenführer</option>
-                            <option value="Zugführer">Zugführer</option>
-                            <option value="Einsatzleiter">Einsatzleiter</option>
-                            <option value="Melder">Melder</option>
-                            <option value="Truppmann">Truppmann</option>
-                            <option value="Truppführer">Truppführer</option>
-                            <option value="Angriffstruppmann">Angriffstruppmann</option>
-                            <option value="Angriffstruppführer">Angriffstruppführer</option>
-                            <option value="Wassertruppmann">Wassertruppmann</option>
-                            <option value="Wassertruppführer">Wassertruppführer</option>
-                            <option value="Schlauchtruppmann">Schlauchtruppmann</option>
-                            <option value="Schlauchtruppführer">Schlauchtruppführer</option>
-                            <option value="IUK-Einheit">IUK-Einheit</option>
-                            <option value="Führungsassistent">Führungsassistent</option>
-                        </select>
-                        <button type="submit" id="btnAssign" style="width: auto; padding: 4px 8px; flex: 1;" disabled>Zuteilen</button>
-                    </div>
-                </form>
-                <div id="assignedCrewList" style="flex: 1; overflow-y: auto; min-height: 0;"></div>
-            </div>
-        </panel>
-
-        <!-- TAGEBUCH -->
-        <panel style="flex: 1.1; display: flex; flex-direction: column;">
-            <div class="panel-header">Tagebuch</div>
-            <div class="panel-body" id="logBook" style="flex: 1; min-height: 0;">
-                <div class="log-entry"><span class="log-time">[System]</span> Bereit.</div>
-            </div>
-            <div id="logInputContainer" style="padding: 6px; background: #222; border-top: 1px solid var(--border-color); flex-shrink: 0;">
-                <form id="addLogNoteForm" style="display: flex; gap: 5px;">
-                    <input type="text" id="logNoteInput" placeholder="Info zu ausgewähltem Einsatz eintragen..." disabled style="flex: 1;">
-                    <button type="submit" id="btnLogNote" disabled style="width: auto; padding: 4px 8px;">Eintragen</button>
-                </form>
-            </div>
-        </panel>
     </div>
 
+    <div class="dashboard-section">
+        <div class="einsaetze-header">
+            <div class="section-title" style="margin:0;">Einsätze</div>
+            <button class="btn-new-incident" onclick="toggleIncidentModal(true)">+ Neuer Einsatz</button>
+        </div>
+        <div class="accordion-item">
+            <div class="accordion-header"><span class="accordion-counter" id="activeIncCounter">0</span> Laufende Einsätze</div>
+            <div id="dashActiveIncidentsContainer">
+                <div class="empty-notice">Keine laufenden Einsätze vorhanden.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- App Ansicht (Einsätze Liste) -->
+<div id="appContainer">
+    <div class="sub-header">
+        <div class="page-title" style="margin:0;">Einsatzverwaltung & Details</div>
+        <button onclick="closeApp()" style="background: #424242; padding: 8px 14px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Zurück zum Dashboard</button>
+    </div>
+    <div id="incidentListContainer">
+        <div class="empty-notice">Keine Einsätze vorhanden.</div>
+    </div>
+</div>
+
+<!-- Archiv Ansicht -->
+<div id="archiveView">
+    <div class="sub-header">
+        <div class="page-title" style="margin:0;">Archiv (Abgeschlossene Einsätze)</div>
+        <button onclick="closeArchiveView()" style="background: #424242; padding: 8px 14px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Zurück zum Dashboard</button>
+    </div>
+    <div id="archiveListContainer">
+        <div class="empty-notice">Keine archivierten Einsätze vorhanden.</div>
+    </div>
+</div>
+
+<!-- Detail Ansicht -->
+<div id="detailView">
+    <div class="detail-layout">
+        <div class="detail-left">
+            <div class="detail-card">
+                <div class="detail-top-row">
+                    <span class="detail-title" id="detStichwort">-</span>
+                    <span class="detail-number" id="detNummer">-</span>
+                </div>
+                <div class="detail-address">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                    <span id="detAdresse">-</span>
+                </div>
+                <div class="detail-desc">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#aaa"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    <span id="detBeschreibung">-</span>
+                </div>
+                <div class="detail-btn-grid">
+                    <button class="custom-btn">📍 Anfahrt</button>
+                    <button class="custom-btn" id="btnCompleteIncident" style="background: #b71c1c; border-color: #e53935; font-weight: bold;">🚨 Einsatz beenden</button>
+                    <button class="custom-btn">📝 Notiz</button>
+                    <button class="custom-btn" onclick="openIncidentHelperView()">🧑‍🚒 Helfer</button>
+                    <button class="custom-btn" onclick="openMonitorView()" style="background: var(--accent-blue); border-color: #1976d2; font-weight: bold;">🖥️ Monitor Ansicht</button>
+                    <button class="custom-btn btn-red-text" onclick="closeDetailView()">← Startseite</button>
+                </div>
+            </div>
+
+            <div class="detail-card">
+                <div style="font-weight: bold; margin-bottom: 8px;">Beteiligte EM</div>
+                <div id="detAssignedEmContainer" style="display: flex; flex-direction: column; gap: 6px;">
+                    <div style="color: var(--text-muted); font-size: 0.85rem; font-style: italic;">Keine Fahrzeuge zugewiesen.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-right">
+            <div style="padding: 10px; background: #222; border-bottom: 1px solid var(--border-color); display: flex; justify-content: flex-end;">
+                <a id="mapExternalLink" href="#" target="_blank" class="custom-btn" style="background: #424242; font-size: 0.75rem;">In Maps öffnen ↗</a>
+            </div>
+            <iframe id="mapFrame" width="100%" height="100%" style="border:0; flex:1;" loading="lazy" src=""></iframe>
+        </div>
+    </div>
+</div>
+
+<!-- Monitor Ansicht -->
+<div id="monitorView">
+    <div class="monitor-layout">
+        <div class="monitor-left">
+            <div>
+                <button class="monitor-back-btn" onclick="closeMonitorView()">← Zurück</button>
+                <div class="monitor-header-bar">
+                    <div class="monitor-stichwort-text" id="monStichwort">H1</div>
+                </div>
+                <div class="monitor-beschreibung" id="monBeschreibung">Ölaufnahme nach VkU</div>
+                <div class="monitor-address-block">
+                    <div class="monitor-address-line" id="monStrasse">Kreuzung B 455</div>
+                    <div class="monitor-address-line" id="monHausStrasse">Königsteiner Str.</div>
+                    <div class="monitor-address-line" id="monOrt">Oberursel, Oberursel</div>
+                </div>
+            </div>
+            <div>
+                <div style="font-size: 1.1rem; color: #aaa; margin-bottom: 8px;">Zugewiesene Fahrzeuge:</div>
+                <div class="monitor-vehicles-row" id="monVehiclesContainer">
+                    <div class="monitor-vehicle-box">1-52</div>
+                    <div class="monitor-vehicle-box">1-44</div>
+                </div>
+            </div>
+        </div>
+        <div class="monitor-right">
+            <iframe id="monitorMapFrame" width="100%" height="100%" style="border:0;" loading="lazy" src=""></iframe>
+        </div>
+    </div>
+</div>
+
+<!-- Globale Helfererfassung Ansicht -->
+<div id="helperView">
+    <div class="sub-header">
+        <div class="page-title" style="margin:0;">Helfererfassung</div>
+        <div style="display: flex; gap: 10px;">
+            <button id="btnOpenHelperModal" class="btn-primary" style="display: none;" onclick="toggleHelperModal(true)">+ Helfer erstellen</button>
+            <button onclick="closeHelperView()" style="background: #424242; padding: 8px 14px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Zurück</button>
+        </div>
+    </div>
+    <div id="helperListContainer">
+        <div class="empty-notice">Keine Helfer erfasst.</div>
+    </div>
+</div>
+
+<!-- Einsatzmittel Erfassung Ansicht -->
+<div id="emView">
+    <div class="sub-header">
+        <div class="page-title" style="margin:0;">Einsatzmittelverwaltung</div>
+        <div style="display: flex; gap: 10px;">
+            <button id="btnOpenEmModal" class="btn-primary" style="display: none;" onclick="toggleEmModal(true)">+ Einsatzmittel hinzufügen</button>
+            <button onclick="closeEmView()" style="background: #424242; padding: 8px 14px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Zurück</button>
+        </div>
+    </div>
+    <div id="emListContainer">
+        <div class="empty-notice">Keine Einsatzmittel erfasst.</div>
+    </div>
+</div>
+
+<!-- Extra: Helfer im Einsatz Ansicht (Zweigeteilt) -->
+<div id="incidentHelperView">
+    <div class="sub-header">
+        <div class="page-title" id="incidentHelperTitle" style="margin:0;">Helfer im Einsatz</div>
+        <button onclick="closeIncidentHelperView()" style="background: #424242; padding: 8px 14px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Zurück zum Einsatz</button>
+    </div>
+
+    <div style="display: flex; gap: 20px; align-items: flex-start;">
+        <!-- Linke Spalte: Helfer -->
+        <div style="width: 45%; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 15px;">
+            <div style="font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 6px;">Verfügbare Helfer</div>
+            <div id="incidentHelperListContainer" style="display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - 220px); overflow-y: auto;">
+                <div class="empty-notice">Keine Helfer gefunden.</div>
+            </div>
+        </div>
+
+        <!-- Rechte Spalte: Fahrzeuge & Positionen -->
+        <div style="width: 55%; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 15px;">
+            <div style="font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 6px;">Zugewiesene Fahrzeuge & Positionen</div>
+            <div id="incidentVehiclePositionsContainer" style="display: flex; flex-direction: column; gap: 12px; max-height: calc(100vh - 220px); overflow-y: auto;">
+                <div class="empty-notice">Keine Fahrzeuge zugewiesen.</div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- JAVASCRIPT LOGIK MIT FIREBASE FIRESTORE -->
@@ -655,32 +608,25 @@
     const db = firebase.firestore();
 
     let currentUser = null;
-    let selectedIncidentId = null;
-    let stayLoggedInState = false;
-
+    let currentDetailIncidentId = null;
     let cloudData = {
         accounts: [],
-        keywords: [],
         incidents: [],
-        persons: [],
-        vehicles: [],
-        assignments: [],
-        logs: []
+        helpers: [],
+        einsatzmittel: []
     };
 
-    setInterval(() => {
-        document.getElementById('liveClock').innerText = new Date().toTimeString().split(' ')[0];
-    }, 1000);
-
+    // Toggle Funktion für den "Angemeldet bleiben" Button
     function toggleStayLoggedIn() {
-        stayLoggedInState = !stayLoggedInState;
-        let btn = document.getElementById('stayLoggedInBtn');
-        if (stayLoggedInState) {
-            btn.innerText = "Ja";
-            btn.style.backgroundColor = "var(--accent-green)";
+        let btn = document.getElementById('stayLoggedInToggle');
+        if (btn.classList.contains('no')) {
+            btn.classList.remove('no');
+            btn.classList.add('yes');
+            btn.innerText = 'Ja';
         } else {
-            btn.innerText = "Nein";
-            btn.style.backgroundColor = "#424242";
+            btn.classList.remove('yes');
+            btn.classList.add('no');
+            btn.innerText = 'Nein';
         }
     }
 
@@ -695,683 +641,857 @@
             });
         }
 
-        const keySnap = await db.collection('edp_keywords').get();
-        if (keySnap.empty) {
-            await db.collection('edp_keywords').add({ name: 'Kleinbrand (Übung)', createdBy: 'adminedp' });
-            await db.collection('edp_keywords').add({ name: 'Technische Hilfeleistung', createdBy: 'adminedp' });
-        }
-
         db.collection('edp_accounts').onSnapshot(snap => {
             cloudData.accounts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            checkPersistedLogin();
-            if (currentUser && (currentUser.isAdmin || currentUser.canEdit)) renderAdminLists();
-        });
+            
+            checkAutoLogin();
 
-        db.collection('edp_keywords').onSnapshot(snap => {
-            cloudData.keywords = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            loadFormInputs();
-            if (currentUser && (currentUser.isAdmin || currentUser.canEdit)) renderAdminLists();
+            if (currentUser && currentUser.isAdmin) {
+                renderAccountsList();
+            }
         });
 
         db.collection('edp_incidents').onSnapshot(snap => {
-            cloudData.incidents = snap.docs.map(doc => ({ ...doc.data() }));
-            cloudData.incidents.sort((a, b) => b.id - a.id);
-            renderTable();
-            cleanupOrphanedData();
-        });
-
-        db.collection('edp_persons').onSnapshot(snap => {
-            cloudData.persons = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderPersons();
-            updateAssignDropdowns();
-        });
-
-        db.collection('edp_vehicles').onSnapshot(snap => {
-            cloudData.vehicles = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderVehicles();
-            updateAssignDropdowns();
-        });
-
-        db.collection('edp_assignments').onSnapshot(snap => {
-            cloudData.assignments = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderAssignments();
-        });
-
-        db.collection('edp_logs').onSnapshot(snap => {
-            cloudData.logs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            cloudData.logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-            if (selectedIncidentId) {
-                renderLogsForIncident(selectedIncidentId);
-            } else {
-                renderEmptyLogs();
+            cloudData.incidents = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderDashboardIncidents();
+            renderArchiveIncidents();
+            if (currentDetailIncidentId) {
+                renderIncidentHelpersList();
+                updateDetailAssignedEm();
+                renderIncidentVehiclePositions();
             }
         });
-    }
 
-    async function cleanupOrphanedData() {
-        if (!cloudData.incidents) return;
-        let validIncidentIds = new Set(cloudData.incidents.map(i => i.id));
-
-        for (let l of cloudData.logs) {
-            if (l.incidentId && !validIncidentIds.has(l.incidentId)) {
-                if (l.id) await db.collection('edp_logs').doc(l.id).delete();
+        db.collection('edp_helpers').onSnapshot(snap => {
+            cloudData.helpers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderHelpersList();
+            if (currentDetailIncidentId) {
+                renderIncidentHelpersList();
             }
-        }
+        });
 
-        for (let a of cloudData.assignments) {
-            if (a.incidentId && !validIncidentIds.has(a.incidentId)) {
-                if (a.id) await db.collection('edp_assignments').doc(a.id).delete();
+        db.collection('edp_einsatzmittel').onSnapshot(snap => {
+            cloudData.einsatzmittel = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            renderEmList();
+            if (document.getElementById('incidentModal').style.display === 'flex') {
+                renderIncidentEmCheckboxes();
             }
-        }
+            if (currentDetailIncidentId) {
+                renderIncidentVehiclePositions();
+            }
+        });
     }
 
     initFirebaseSync();
 
-    function checkPersistedLogin() {
+    function checkAutoLogin() {
         if (currentUser) return;
-
-        let savedUser = localStorage.getItem('edp_logged_user');
+        let savedUser = localStorage.getItem('edp_stay_logged_user');
         if (savedUser && cloudData.accounts.length > 0) {
             let found = cloudData.accounts.find(acc => acc.user === savedUser);
             if (found) {
-                currentUser = found;
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('appContainer').style.display = 'grid';
-                initApp();
+                completeLogin(found);
             }
         }
     }
 
-    document.getElementById('loginForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        let u = document.getElementById('loginUser').value.trim();
-        let p = document.getElementById('loginPass').value.trim();
+    function completeLogin(userObj) {
+        currentUser = userObj;
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('dashboardView').style.display = 'block';
+        document.getElementById('currentUserDisplay').innerText = "Eingeloggt: " + currentUser.user;
 
-        let found = cloudData.accounts.find(acc => acc.user === u && acc.pass === p);
-
-        if (found) {
-            currentUser = found;
-            if (stayLoggedInState) {
-                localStorage.setItem('edp_logged_user', found.user);
-            } else {
-                localStorage.removeItem('edp_logged_user');
-            }
-
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('appContainer').style.display = 'grid';
-            initApp();
-        } else {
-            document.getElementById('loginError').innerText = "Falscher Benutzername oder Passwort!";
-        }
-    });
-
-    function logout() {
-        currentUser = null;
-        selectedIncidentId = null;
-        localStorage.removeItem('edp_logged_user');
-
-        document.getElementById('loginScreen').style.display = 'flex';
-        document.getElementById('appContainer').style.display = 'none';
-        document.getElementById('loginForm').reset();
-        document.getElementById('loginError').innerText = '';
-        stayLoggedInState = false;
-        let btn = document.getElementById('stayLoggedInBtn');
-        btn.innerText = "Nein";
-        btn.style.backgroundColor = "#424242";
-
-        setCrewPanelActive(false, null);
-        setLogNoteActive(false, null);
-    }
-
-    function initApp() {
-        document.getElementById('currentUserDisplay').innerText = `Eingeloggt: ${currentUser.user}`;
-        document.getElementById('currentAreaLabel').innerText = currentUser.user;
-
-        if (currentUser.isAdmin || currentUser.canEdit) {
+        if (currentUser.isAdmin) {
             document.getElementById('adminBtn').style.display = 'inline-block';
         } else {
             document.getElementById('adminBtn').style.display = 'none';
         }
 
-        if (currentUser.isAdmin) {
-            document.getElementById('modalHeaderTitle').innerText = "Administrator-Verwaltung (Stammdaten & Accounts)";
-            document.getElementById('accountManagementSection').style.display = 'block';
+        if (currentUser.isAdmin || currentUser.canEdit) {
+            document.getElementById('btnOpenHelperModal').style.display = 'inline-block';
+            document.getElementById('btnOpenEmModal').style.display = 'inline-block';
         } else {
-            document.getElementById('modalHeaderTitle').innerText = "Alarmstichworte verwalten";
-            document.getElementById('accountManagementSection').style.display = 'none';
+            document.getElementById('btnOpenHelperModal').style.display = 'none';
+            document.getElementById('btnOpenEmModal').style.display = 'none';
         }
 
-        if (currentUser.canEdit === false && !currentUser.isAdmin) {
-            document.getElementById('btnCreateInc').disabled = true;
-            document.getElementById('btnCreateInc').innerText = "Keine Schreibrechte";
-            document.getElementById('permissionHint').innerText = "Nur Lese-Modus";
-        } else {
-            document.getElementById('btnCreateInc').disabled = false;
-            document.getElementById('btnCreateInc').innerText = "Einsatz anlegen";
-            document.getElementById('permissionHint').innerText = "";
-        }
-
-        loadFormInputs();
-        renderTable();
-        renderPersons();
-        renderVehicles();
-        setCrewPanelActive(false, null);
-        setLogNoteActive(false, null);
-        renderEmptyLogs();
-        if (currentUser.isAdmin || currentUser.canEdit) renderAdminLists();
+        renderAccountsList();
+        renderHelpersList();
+        renderEmList();
     }
 
-    function loadFormInputs() {
-        let keySelect = document.getElementById('incType');
-        keySelect.innerHTML = '';
-        let filteredKeywords = cloudData.keywords.filter(k => k.createdBy === currentUser.user);
-        filteredKeywords.forEach(k => {
-            keySelect.innerHTML += `<option value="${k.name}">${k.name}</option>`;
-        });
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        let u = document.getElementById('userInput').value.trim();
+        let p = document.getElementById('passInput').value.trim();
+        let stayLoggedIn = document.getElementById('stayLoggedInToggle').classList.contains('yes');
+
+        let found = cloudData.accounts.find(acc => acc.user === u && acc.pass === p);
+
+        if (found) {
+            if (found.user !== 'adminedp' && found.canEdit && (!found.customPasswordSet || found.pass === "mariie.192")) {
+                let newCustomPass = prompt(`Hallo ${found.user}! Da du Schreibrechte hast, lege bitte dein eigenes Passwort fest:`);
+                if (newCustomPass && newCustomPass.trim() !== "") {
+                    found.pass = newCustomPass.trim();
+                    db.collection('edp_accounts').doc(found.id).update({ pass: newCustomPass.trim(), customPasswordSet: true });
+                    alert("Dein eigenes Passwort wurde erfolgreich gespeichert!");
+                }
+            }
+
+            if (stayLoggedIn) {
+                localStorage.setItem('edp_stay_logged_user', found.user);
+            } else {
+                localStorage.removeItem('edp_stay_logged_user');
+            }
+
+            completeLogin(found);
+        } else {
+            document.getElementById('loginErr').innerText = "Falscher Benutzername oder Passwort!";
+        }
+    });
+
+    function logout() {
+        localStorage.removeItem('edp_stay_logged_user');
+        currentUser = null;
+        document.getElementById('loginScreen').style.display = 'flex';
+        document.getElementById('dashboardView').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'none';
+        document.getElementById('detailView').style.display = 'none';
+        document.getElementById('helperView').style.display = 'none';
+        document.getElementById('archiveView').style.display = 'none';
+        document.getElementById('incidentHelperView').style.display = 'none';
+        document.getElementById('emView').style.display = 'none';
+        document.getElementById('monitorView').style.display = 'none';
+        document.getElementById('loginForm').reset();
+        
+        let btn = document.getElementById('stayLoggedInToggle');
+        btn.classList.remove('yes');
+        btn.classList.add('no');
+        btn.innerText = 'Nein';
+
+        document.getElementById('loginErr').innerText = '';
     }
 
     function toggleAdminModal(show) {
         document.getElementById('adminModal').style.display = show ? 'flex' : 'none';
-        if (show && (currentUser.isAdmin || currentUser.canEdit)) renderAdminLists();
+        if (show) renderAccountsList();
     }
 
-    function togglePasswordModal(show) {
-        document.getElementById('changePasswordModal').style.display = show ? 'flex' : 'none';
-        document.getElementById('changePasswordForm').reset();
-        document.getElementById('changePassError').innerText = '';
+    function toggleHelperModal(show) {
+        document.getElementById('helperModal').style.display = show ? 'flex' : 'none';
+        if (!show) document.getElementById('addHelperForm').reset();
     }
 
-    document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        let oldP = document.getElementById('oldPassInput').value;
-        let newP = document.getElementById('newPassInput').value;
-        let confP = document.getElementById('newPassConfirmInput').value;
-
-        if (newP !== confP) {
-            document.getElementById('changePassError').innerText = "Das neue Passwort stimmt nicht mit der Bestätigung überein!";
-            return;
-        }
-
-        let accDoc = cloudData.accounts.find(a => a.user === currentUser.user);
-        if (!accDoc || accDoc.pass !== oldP) {
-            document.getElementById('changePassError').innerText = "Das alte Passwort ist falsch!";
-            return;
-        }
-
-        await db.collection('edp_accounts').doc(accDoc.id).update({ pass: newP });
-        currentUser.pass = newP;
-
-        alert("Passwort erfolgreich geändert!");
-        togglePasswordModal(false);
-    });
-
-    async function adminResetPassword(docId, username) {
-        let newPass = prompt(`Neues Passwort für Benutzer "${username}" eingeben:`);
-        if (!newPass || newPass.trim() === "") return;
-
-        await db.collection('edp_accounts').doc(docId).update({ pass: newPass.trim() });
-        alert(`Passwort für "${username}" wurde erfolgreich zurückgesetzt!`);
+    function toggleEmModal(show) {
+        document.getElementById('emModal').style.display = show ? 'flex' : 'none';
+        if (!show) document.getElementById('addEmForm').reset();
     }
 
-    async function adminDeleteAccount(docId, username) {
-        if (username === 'adminedp') {
-            alert("Der Haupt-Admin-Account kann nicht gelöscht werden!");
-            return;
-        }
-        if (!confirm(`Account "${username}" wirklich löschen?`)) return;
-
-        await db.collection('edp_accounts').doc(docId).delete();
-    }
-
-    function renderAdminLists() {
-        let keyDiv = document.getElementById('adminKeywordList');
-        keyDiv.innerHTML = '';
-        let filteredKeywords = cloudData.keywords.filter(k => k.createdBy === currentUser.user);
-
-        if (filteredKeywords.length === 0) {
-            keyDiv.innerHTML = `<div style="color:var(--text-muted); font-size:0.75rem; text-align:center; padding:5px;">Keine eigenen Stichworte vorhanden.</div>`;
+    function togglePositionModal(show, emId = '') {
+        let modal = document.getElementById('positionModal');
+        modal.style.display = show ? 'flex' : 'none';
+        if (show) {
+            document.getElementById('posEmId').value = emId;
+            document.getElementById('posNameInput').value = '';
         } else {
-            filteredKeywords.forEach((k) => {
-                keyDiv.innerHTML += `<div class="item-row"><span>${k.name}</span> <button class="secondary" style="width:auto; padding:2px 5px;" onclick="deleteKeyword('${k.id}')">Löschen</button></div>`;
-            });
-        }
-
-        if (currentUser.isAdmin) {
-            let accDiv = document.getElementById('adminAccountList');
-            accDiv.innerHTML = '';
-            cloudData.accounts.forEach(a => {
-                let badgeAreaClass = a.isAdmin ? 'badge-admin' : 'badge-jf';
-                let areaLabel = a.isAdmin ? 'Administrator' : 'Benutzer';
-                accDiv.innerHTML += `
-                    <div class="item-row">
-                        <span><strong>${a.user}</strong> <span class="badge ${badgeAreaClass}">${areaLabel}</span> (Schreiben: ${a.canEdit ? 'Ja' : 'Nein'})</span>
-                        <div style="display:flex; gap:4px;">
-                            <button class="secondary" style="width:auto; padding:2px 6px;" onclick="adminResetPassword('${a.id}', '${a.user}')">PW zurücksetzen</button>
-                            ${a.user !== 'adminedp' ? `<button class="secondary" style="width:auto; padding:2px 6px; background:#b71c1c;" onclick="adminDeleteAccount('${a.id}', '${a.user}')">Löschen</button>` : ''}
-                        </div>
-                    </div>`;
-            });
+            document.getElementById('addPositionForm').reset();
         }
     }
 
-    document.getElementById('addKeywordForm').addEventListener('submit', async (e) => {
+    function toggleDeletePositionModal(show, emId = '') {
+        let modal = document.getElementById('deletePositionModal');
+        modal.style.display = show ? 'flex' : 'none';
+        if (show) {
+            document.getElementById('delPosEmId').value = emId;
+            let em = cloudData.einsatzmittel.find(x => x.id === emId);
+            let container = document.getElementById('deletePositionRadioContainer');
+            container.innerHTML = '';
+            
+            if (em && em.positions && em.positions.length > 0) {
+                em.positions.forEach((pos) => {
+                    container.innerHTML += `
+                        <label class="pos-select-label">
+                            <input type="checkbox" name="selectedPositions" value="${pos}">
+                            <span>${pos}</span>
+                        </label>
+                    `;
+                });
+            } else {
+                container.innerHTML = `<div style="color: var(--text-muted); font-size: 0.85rem;">Keine Positionen vorhanden.</div>`;
+            }
+        }
+    }
+
+    function toggleAssignHelperModal(show, helperId = '', helperName = '') {
+        let modal = document.getElementById('assignHelperModal');
+        modal.style.display = show ? 'flex' : 'none';
+        if (show) {
+            document.getElementById('assignHelperId').value = helperId;
+            document.getElementById('assignHelperModalTitle').innerText = `Helfer "${helperName}" zuordnen`;
+            let container = document.getElementById('assignPositionRadioContainer');
+            container.innerHTML = '';
+
+            let inc = cloudData.incidents.find(i => i.id === currentDetailIncidentId);
+            if (!inc || !inc.assignedVehicles || inc.assignedVehicles.length === 0) {
+                container.innerHTML = `<div style="color: var(--text-muted); font-size: 0.85rem;">Keine Fahrzeuge in diesem Einsatz vorhanden.</div>`;
+                return;
+            }
+
+            let hasPositions = false;
+            inc.assignedVehicles.forEach(vehName => {
+                let em = cloudData.einsatzmittel.find(e => e.funkrufname === vehName);
+                if (em && em.positions && em.positions.length > 0) {
+                    em.positions.forEach(pos => {
+                        hasPositions = true;
+                        container.innerHTML += `
+                            <label class="pos-select-label">
+                                <input type="radio" name="selectedAssignPosition" value="${vehName}:::${pos}">
+                                <span><strong>${vehName}</strong> –${pos}</span>
+                            </label>
+                        `;
+                    });
+                }
+            });
+
+            if (!hasPositions) {
+                container.innerHTML = `<div style="color: var(--text-muted); font-size: 0.85rem;">Keine Positionen für die zugewiesenen Fahrzeuge definiert.</div>`;
+            }
+        } else {
+            document.getElementById('assignHelperForm').reset();
+        }
+    }
+
+    document.getElementById('assignHelperForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        let name = document.getElementById('newKeyName').value.trim();
-        if (!name) return;
-        await db.collection('edp_keywords').add({ name, createdBy: currentUser.user });
-        document.getElementById('newKeyName').value = '';
+        let helperId = document.getElementById('assignHelperId').value;
+        let selectedRadio = document.querySelector('input[name="selectedAssignPosition"]:checked');
+
+        if (!selectedRadio) {
+            alert("Bitte wähle eine Position aus.");
+            return;
+        }
+
+        let [vehName, posName] = selectedRadio.value.split(":::");
+        let helper = cloudData.helpers.find(h => h.id === helperId);
+        if (!helper) return;
+
+        let helperFullName = `${helper.nachname},${helper.vorname}`;
+
+        let inc = cloudData.incidents.find(i => i.id === currentDetailIncidentId);
+        if (!inc) return;
+
+        let assignments = inc.positionAssignments || {};
+        let mapKey = `${vehName}:::${posName}`;
+        assignments[mapKey] = helperFullName;
+
+        await db.collection('edp_incidents').doc(currentDetailIncidentId).update({ positionAssignments: assignments });
+        toggleAssignHelperModal(false);
     });
+
+    function toggleIncidentModal(show) {
+        if (show && (!currentUser || (!currentUser.isAdmin && !currentUser.canEdit))) {
+            alert("Keine Schreibrechte vorhanden!");
+            return;
+        }
+        document.getElementById('incidentModal').style.display = show ? 'flex' : 'none';
+        if (show) {
+            renderIncidentEmCheckboxes();
+        } else {
+            document.getElementById('addIncidentForm').reset();
+        }
+    }
+
+    function renderIncidentEmCheckboxes() {
+        let container = document.getElementById('incidentEmCheckboxContainer');
+        container.innerHTML = '';
+
+        if (cloudData.einsatzmittel.length === 0) {
+            container.innerHTML = `<div style="color: var(--text-muted); font-size: 0.85rem; font-style: italic;">Keine Einsatzmittel verfügbar.</div>`;
+            return;
+        }
+
+        cloudData.einsatzmittel.forEach(em => {
+            container.innerHTML += `
+                <label class="pos-select-label">
+                    <input type="checkbox" name="incidentEmCheck" value="${em.funkrufname}">
+                    <span>${em.funkrufname}</span>
+                </label>
+            `;
+        });
+    }
 
     document.getElementById('addAccountForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (!currentUser.isAdmin) return;
-        let user = document.getElementById('accUser').value.trim();
-        let pass = document.getElementById('accPass').value.trim();
-        let canEdit = document.getElementById('accCanEdit').value === 'true';
+        if (!currentUser || !currentUser.isAdmin) return;
+
+        let user = document.getElementById('newAccUser').value.trim();
+        let pass = document.getElementById('newAccPass').value.trim();
+        let canEdit = document.getElementById('newAccEdit').value === 'true';
 
         if (cloudData.accounts.some(a => a.user === user)) {
             alert("Benutzername existiert bereits!");
             return;
         }
-        await db.collection('edp_accounts').add({ user, pass, isAdmin: false, canEdit });
+
+        await db.collection('edp_accounts').add({ user, pass, isAdmin: false, canEdit, customPasswordSet: false });
         document.getElementById('addAccountForm').reset();
-        alert("Account erfolgreich erstellt!");
+        alert("Account erfolgreich in der Cloud erstellt!");
     });
 
-    async function deleteKeyword(id) {
-        await db.collection('edp_keywords').doc(id).delete();
-    }
-
-    document.getElementById('incidentForm').addEventListener('submit', async (e) => {
+    document.getElementById('addHelperForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (currentUser.canEdit === false && !currentUser.isAdmin) return;
+        if (!currentUser || (!currentUser.isAdmin && !currentUser.canEdit)) return;
 
-        let type = document.getElementById('incType').value;
-        let location = document.getElementById('incLocationText').value.trim();
-        let patient = document.getElementById('incPatient').value.trim() || 'Unbekannt';
-        let description = document.getElementById('incDescription').value.trim();
-        let timeString = new Date().toTimeString().substring(0, 5);
-        let incId = Math.floor(100 + Math.random() * 900);
+        let nachname = document.getElementById('helperNachname').value.trim();
+        let vorname = document.getElementById('helperVorname').value.trim();
+        let rolle = document.getElementById('helperRolle').value.trim();
 
-        let newInc = {
-            id: incId,
-            createdBy: currentUser.user,
-            time: timeString,
-            type: type,
-            location: location,
-            patient: patient,
-            description: description,
-            status: 'Neu'
-        };
-
-        await db.collection('edp_incidents').doc(incId.toString()).set(newInc);
-        selectedIncidentId = incId;
-
-        await addLog(incId, `Einsatz #${incId} (${type}) erfasst.`);
-        if (description) {
-            await addLog(incId, `Beschreibung: ${description}`);
-        }
-
-        document.getElementById('incLocationText').value = '';
-        document.getElementById('incDescription').value = '';
-        document.getElementById('incPatient').value = '';
+        await db.collection('edp_helpers').add({ nachname, vorname, rolle });
+        toggleHelperModal(false);
     });
 
-    function renderTable() {
-        let tbody = document.getElementById('incidentTableBody');
-        tbody.innerHTML = '';
+    document.getElementById('addEmForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!currentUser || (!currentUser.isAdmin && !currentUser.canEdit)) return;
 
-        let filtered = cloudData.incidents.filter(i => i.createdBy === currentUser.user);
+        let funkrufname = document.getElementById('emFunkrufname').value.trim();
 
-        if (filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">Keine Einsätze vorhanden.</td></tr>`;
-            selectedIncidentId = null;
-            setCrewPanelActive(false, null);
-            setLogNoteActive(false, null);
-            renderEmptyLogs();
-            renderDetails(null);
-            return;
+        await db.collection('edp_einsatzmittel').add({ funkrufname, positions: [] });
+        toggleEmModal(false);
+    });
+
+    document.getElementById('addPositionForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!currentUser || (!currentUser.isAdmin && !currentUser.canEdit)) return;
+
+        let emId = document.getElementById('posEmId').value;
+        let posName = document.getElementById('posNameInput').value.trim();
+
+        if (emId && posName) {
+            let em = cloudData.einsatzmittel.find(x => x.id === emId);
+            let positions = em.positions || [];
+            if (!positions.includes(posName)) {
+                positions.push(posName);
+                await db.collection('edp_einsatzmittel').doc(emId).update({ positions: positions });
+            }
+            togglePositionModal(false);
         }
+    });
 
-        if (!filtered.some(i => i.id === selectedIncidentId)) {
-            selectedIncidentId = filtered[0].id;
+    document.getElementById('deletePositionForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!currentUser || (!currentUser.isAdmin && !currentUser.canEdit)) return;
+
+        let emId = document.getElementById('delPosEmId').value;
+        let selectedCheckboxes = document.querySelectorAll('input[name="selectedPositions"]:checked');
+
+        if (emId && selectedCheckboxes.length > 0) {
+            let selectedValues = Array.from(selectedCheckboxes).map(cb => cb.value);
+            let em = cloudData.einsatzmittel.find(x => x.id === emId);
+            let remainingPositions = (em.positions || []).filter(p => !selectedValues.includes(p));
+
+            await db.collection('edp_einsatzmittel').doc(emId).update({ positions: remainingPositions });
+            toggleDeletePositionModal(false);
+        } else {
+            alert("Bitte wähle mindestens eine Position zum Löschen aus.");
         }
+    });
 
-        filtered.forEach(inc => {
-            let tr = document.createElement('tr');
-            if (inc.id === selectedIncidentId) tr.classList.add('selected');
+    document.getElementById('addIncidentForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!currentUser || (!currentUser.isAdmin && !currentUser.canEdit)) return;
 
-            let badgeClass = 'badge-neu';
-            if (inc.status === 'Aktiv') badgeClass = 'badge-aktiv';
-            if (inc.status === 'Abgeschlossen') badgeClass = 'badge-fertig';
+        let stichwort = document.getElementById('incStichwort').value.trim();
+        let beschreibung = document.getElementById('incBeschreibung').value.trim();
+        let hausnummer = document.getElementById('incHausnummer').value.trim();
+        let strasse = document.getElementById('incStrasse').value.trim();
+        let plzOrt = document.getElementById('incPlzOrt').value.trim();
 
-            tr.innerHTML = `
-                <td>#${inc.id}</td>
-                <td>${inc.time}</td>
-                <td>${inc.type}</td>
-                <td>${inc.location}</td>
-                <td><span class="badge ${badgeClass}">${inc.status}</span></td>
-            `;
-            tr.onclick = () => {
-                selectedIncidentId = inc.id;
-                renderTable();
-                renderDetails(inc.id);
-            };
-            tbody.appendChild(tr);
+        let checkedEm = document.querySelectorAll('input[name="incidentEmCheck"]:checked');
+        let selectedVehicles = Array.from(checkedEm).map(cb => cb.value);
+
+        let nextNum = cloudData.incidents.length + 1;
+
+        await db.collection('edp_incidents').add({
+            nummer: nextNum,
+            stichwort,
+            beschreibung,
+            hausnummer,
+            strasse,
+            plzOrt,
+            assignedVehicles: selectedVehicles,
+            positionAssignments: {},
+            status: 'Laufend'
         });
 
-        if (selectedIncidentId) {
-            let inc = filtered.find(i => i.id === selectedIncidentId);
-            if (inc) {
-                setCrewPanelActive(true, inc);
-                setLogNoteActive(true, inc);
-                renderDetails(inc.id);
-            }
-        }
-    }
+        toggleIncidentModal(false);
+    });
 
-    function setCrewPanelActive(isActive, inc = null) {
-        let vSel = document.getElementById('assignVehicle');
-        let pSel = document.getElementById('assignPerson');
-        let posSel = document.getElementById('assignPosition');
-        let btn = document.getElementById('btnAssign');
-        let badge = document.getElementById('activeIncidentBadge');
-
-        if (isActive && inc) {
-            badge.innerText = `Einsatz #${inc.id} (${inc.status})`;
-            if (inc.status === 'Abgeschlossen') {
-                badge.style.background = 'var(--accent-green)';
-                badge.style.color = 'white';
-                vSel.disabled = true;
-                pSel.disabled = true;
-                posSel.disabled = true;
-                btn.disabled = true;
-            } else {
-                badge.style.background = 'var(--accent-orange)';
-                badge.style.color = 'black';
-                vSel.disabled = false;
-                pSel.disabled = false;
-                posSel.disabled = false;
-                btn.disabled = false;
-                updateAssignDropdowns();
-            }
-            renderAssignments();
-        } else {
-            vSel.disabled = true;
-            pSel.disabled = true;
-            posSel.disabled = true;
-            btn.disabled = true;
-            badge.innerText = 'Kein aktiver Einsatz ausgewählt';
-            badge.style.background = '#444';
-            badge.style.color = 'var(--text-muted)';
-            document.getElementById('assignedCrewList').innerHTML = `<div style="color:var(--text-muted); text-align:center; font-size:0.75rem; margin-top:5px;">Bitte Einsatz wählen.</div>`;
-        }
-    }
-
-    function setLogNoteActive(isActive, inc = null) {
-        let input = document.getElementById('logNoteInput');
-        let btn = document.getElementById('btnLogNote');
-        let inputContainer = document.getElementById('logInputContainer');
-
-        if (isActive && inc) {
-            if (inc.status === 'Abgeschlossen') {
-                inputContainer.style.display = 'none';
-            } else {
-                inputContainer.style.display = 'block';
-                input.disabled = false;
-                btn.disabled = false;
-                input.placeholder = `Info zu Einsatz #${inc.id} eintragen...`;
-            }
-        } else {
-            inputContainer.style.display = 'block';
-            input.disabled = true;
-            btn.disabled = true;
-            input.placeholder = "Erst Einsatz auswählen...";
-        }
-    }
-
-    function renderDetails(id) {
-        let inc = cloudData.incidents.find(i => i.id === id);
-        let panel = document.getElementById('detailPanel');
-
-        if (!inc) {
-            panel.innerHTML = `<p style="color: var(--text-muted); text-align: center; margin-top: 15px;">Wähle einen Einsatz aus.</p>`;
+    document.getElementById('btnCompleteIncident').addEventListener('click', async () => {
+        if (!currentUser || (!currentUser.isAdmin && !currentUser.canEdit)) {
+            alert("Keine Schreibrechte vorhanden!");
             return;
         }
+        if (!currentDetailIncidentId) return;
 
-        let canAction = currentUser.canEdit || currentUser.isAdmin;
-        let descHtml = inc.description ? `<br><strong>Beschreibung:</strong> ${inc.description}` : '';
-        let mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(inc.location)}`;
+        if (confirm("Möchtest du diesen Einsatz wirklich beenden? Er wird ins Archiv verschoben.")) {
+            await db.collection('edp_incidents').doc(currentDetailIncidentId).update({ status: 'Abgeschlossen' });
+            closeDetailView();
+        }
+    });
 
-        panel.innerHTML = `
-            <div>
-                <strong>ID:</strong> #${inc.id}<br>
-                <strong>Stichwort:</strong> ${inc.type}<br>
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 2px; margin-bottom: 2px;">
-                    <span><strong>Ort:</strong> ${inc.location}</span>
-                    <a href="${mapsUrl}" target="_blank" style="background-color: var(--accent-blue); color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; text-decoration: none; font-weight: bold; white-space: nowrap; margin-left: 6px;">Karte öffnen</a>
-                </div>
-                <strong>Betroffener:</strong> ${inc.patient}
-                ${descHtml}<br>
-                <strong>Status:</strong> ${inc.status}<br>
-                <hr style="border:0; border-top:1px solid var(--border-color); margin:6px 0;">
-                ${canAction ? `
-                    <div style="display:flex; flex-direction:column; gap:4px;">
-                        ${inc.status !== 'Aktiv' ? `<button onclick="updateStatus(${inc.id}, 'Aktiv')">Status: In Bearbeitung</button>` : ''}
-                        ${inc.status !== 'Abgeschlossen' ? `<button class="secondary" style="background-color:var(--accent-green); color:white;" onclick="updateStatus(${inc.id}, 'Abgeschlossen')">Einsatz Beenden</button>` : ''}
-                        <button class="secondary" style="background-color:var(--accent-red); color:white; margin-top:4px;" onclick="deleteIncident(${inc.id})">Einsatz löschen</button>
+    function renderAccountsList() {
+        let container = document.getElementById('accountListContainer');
+        container.innerHTML = '';
+
+        cloudData.accounts.forEach(acc => {
+            let badge = acc.isAdmin ? `<span class="badge-admin">Administrator</span>` : ``;
+            let deleteBtn = acc.user !== 'adminedp' ? `<button class="btn-action btn-delete" onclick="deleteAccount('${acc.id}', '${acc.user}')">Löschen</button>` : '';
+            container.innerHTML += `
+                <div class="admin-row">
+                    <span><strong>${acc.user}</strong> ${badge} (Schreiben: ${acc.canEdit ? 'Ja' : 'Nein'})</span>
+                    <div style="display: flex; gap: 6px;">
+                        <button class="btn-action" onclick="resetPassword('${acc.id}', '${acc.user}')">PW zurücksetzen</button>
+                        ${deleteBtn}
                     </div>
-                ` : `<em style="color:var(--text-muted);">Nur Lese-Rechte.</em>`}
-            </div>
-        `;
-        renderLogsForIncident(id);
-    }
-
-    async function updateStatus(id, newStatus) {
-        await db.collection('edp_incidents').doc(id.toString()).update({ status: newStatus });
-        await addLog(id, `Einsatz #${id} Status geändert zu: ${newStatus}`);
-    }
-
-    async function deleteIncident(id) {
-        if (!confirm(`Einsatz #${id} wirklich unwiderruflich löschen?`)) return;
-
-        selectedIncidentId = null;
-        renderEmptyLogs();
-        setCrewPanelActive(false, null);
-        setLogNoteActive(false, null);
-
-        await db.collection('edp_incidents').doc(id.toString()).delete();
-
-        let batchAssignments = cloudData.assignments.filter(a => a.incidentId === id);
-        for (let a of batchAssignments) {
-            await db.collection('edp_assignments').doc(a.id).delete();
-        }
-
-        let batchLogs = cloudData.logs.filter(l => l.incidentId === id);
-        for (let l of batchLogs) {
-            if (l.id) await db.collection('edp_logs').doc(l.id).delete();
-        }
-
-        renderTable();
-    }
-
-    document.getElementById('addPersonForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        let name = document.getElementById('personName').value.trim();
-        let role = document.getElementById('personRole').value;
-        await db.collection('edp_persons').add({ name, role, createdBy: currentUser.user });
-        document.getElementById('personName').value = '';
-    });
-
-    function renderPersons() {
-        let list = document.getElementById('personList');
-        list.innerHTML = '';
-
-        let filtered = cloudData.persons.filter(p => p.createdBy === currentUser.user);
-
-        filtered.forEach((p) => {
-            let badgeClass = 'badge-jf';
-            if (p.role === 'Betreuer') badgeClass = 'badge-betreuer';
-            if (p.role === 'Gast') badgeClass = 'badge-gast';
-            if (p.role === 'Helfer') badgeClass = 'badge-helfer';
-
-            let roleBadge = `<span class="badge ${badgeClass}">${p.role}</span>`;
-            list.innerHTML += `<div class="item-row"><span>${p.name} ${roleBadge}</span> <button class="secondary" style="width:auto; padding:2px 5px;" onclick="deletePerson('${p.id}')">X</button></div>`;
-        });
-    }
-
-    async function deletePerson(id) {
-        await db.collection('edp_persons').doc(id).delete();
-    }
-
-    document.getElementById('addVehicleForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        let type = document.getElementById('vehType').value.trim();
-        let funk = document.getElementById('vehFunk').value.trim();
-
-        await db.collection('edp_vehicles').add({ type, funk, createdBy: currentUser.user });
-
-        document.getElementById('vehType').value = '';
-        document.getElementById('vehFunk').value = '';
-    });
-
-    function renderVehicles() {
-        let list = document.getElementById('vehicleList');
-        list.innerHTML = '';
-
-        let filtered = cloudData.vehicles.filter(v => v.createdBy === currentUser.user);
-
-        filtered.forEach((v) => {
-            list.innerHTML += `<div class="item-row"><span>${v.type} (${v.funk})</span> <button class="secondary" style="width:auto; padding:2px 5px;" onclick="deleteVehicle('${v.id}')">X</button></div>`;
-        });
-    }
-
-    async function deleteVehicle(id) {
-        await db.collection('edp_vehicles').doc(id).delete();
-    }
-
-    function updateAssignDropdowns() {
-        let vSelect = document.getElementById('assignVehicle');
-        let pSelect = document.getElementById('assignPerson');
-
-        let vehicles = cloudData.vehicles.filter(v => v.createdBy === currentUser.user);
-        let persons = cloudData.persons.filter(p => p.createdBy === currentUser.user);
-
-        vSelect.innerHTML = '<option value="">-- Fahrzeug --</option>';
-        vehicles.forEach(v => {
-            vSelect.innerHTML += `<option value="${v.type} (${v.funk})">${v.type} (${v.funk})</option>`;
-        });
-
-        pSelect.innerHTML = '<option value="">-- Person --</option>';
-        persons.forEach(p => {
-            pSelect.innerHTML += `<option value="${p.name}">${p.name} (${p.role})</option>`;
-        });
-    }
-
-    document.getElementById('assignCrewForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (!selectedIncidentId) return;
-
-        let vehicle = document.getElementById('assignVehicle').value;
-        let person = document.getElementById('assignPerson').value;
-        let position = document.getElementById('assignPosition').value;
-
-        if (!vehicle || !person || !position) return;
-
-        let inc = cloudData.incidents.find(i => i.id === selectedIncidentId);
-        if (inc && inc.status === 'Abgeschlossen') return;
-
-        let existing = cloudData.assignments.find(a => a.incidentId === selectedIncidentId && a.person === person);
-        if (existing) {
-            await db.collection('edp_assignments').doc(existing.id).update({ vehicle, position });
-        } else {
-            await db.collection('edp_assignments').add({ incidentId: selectedIncidentId, vehicle, person, position, createdBy: currentUser.user });
-        }
-
-        document.getElementById('assignCrewForm').reset();
-        updateAssignDropdowns();
-    });
-
-    function renderAssignments() {
-        if (!selectedIncidentId) return;
-
-        let inc = cloudData.incidents.find(i => i.id === selectedIncidentId);
-        let list = document.getElementById('assignedCrewList');
-        list.innerHTML = '';
-
-        let filtered = cloudData.assignments.filter(a => a.incidentId === selectedIncidentId && a.createdBy === currentUser.user);
-
-        if (filtered.length === 0) {
-            list.innerHTML = `<div style="color:var(--text-muted); text-align:center; font-size:0.75rem; margin-top:5px;">Keine Zuteilungen vorhanden.</div>`;
-            return;
-        }
-
-        let isClosed = inc && inc.status === 'Abgeschlossen';
-        let canAction = (currentUser.canEdit || currentUser.isAdmin) && !isClosed;
-
-        filtered.forEach((a) => {
-            let deleteBtnHtml = canAction ? `<button class="secondary" style="width:auto; padding:2px 5px;" onclick="deleteAssignment('${a.id}')">X</button>` : '';
-
-            list.innerHTML += `
-                <div class="item-row">
-                    <span><strong>${a.vehicle}</strong>: ${a.person} <em>(${a.position})</em></span>
-                    ${deleteBtnHtml}
                 </div>
             `;
         });
     }
 
-    async function deleteAssignment(id) {
-        await db.collection('edp_assignments').doc(id).delete();
+    async function resetPassword(docId, username) {
+        let newP = prompt(`Neues Passwort für "${username}" eingeben:`);
+        if (newP && newP.trim() !== "") {
+            await db.collection('edp_accounts').doc(docId).update({ pass: newP.trim() });
+            alert(`Passwort für "${username}" wurde erfolgreich aktualisiert!`);
+        }
     }
 
-    document.getElementById('addLogNoteForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        if (!selectedIncidentId) return;
-        let inc = cloudData.incidents.find(i => i.id === selectedIncidentId);
-        if (inc && inc.status === 'Abgeschlossen') return;
-
-        let text = document.getElementById('logNoteInput').value.trim();
-        if (!text) return;
-
-        await addLog(selectedIncidentId, `[Einsatz #${selectedIncidentId}] ${text}`);
-        document.getElementById('logNoteInput').value = '';
-    });
-
-    async function addLog(incId, text) {
-        let time = new Date().toTimeString().substring(0, 8);
-        let timestamp = Date.now();
-        await db.collection('edp_logs').add({ incidentId: incId, createdBy: currentUser.user, time, text, timestamp });
+    async function deleteAccount(docId, username) {
+        let enteredPass = prompt(`Bitte Passwort eingeben, um Account "${username}" zu löschen:`);
+        if (enteredPass === "mariie.192" || (currentUser && enteredPass === currentUser.pass)) {
+            await db.collection('edp_accounts').doc(docId).delete();
+            alert(`Account "${username}" wurde erfolgreich gelöscht!`);
+        } else if (enteredPass !== null) {
+            alert("Falsches Passwort! Account wurde nicht gelöscht.");
+        }
     }
 
-    function renderEmptyLogs() {
-        let logBook = document.getElementById('logBook');
-        logBook.innerHTML = `<div class="log-entry"><span class="log-time">[System]</span> Bereit.</div>`;
-    }
+    function renderHelpersList() {
+        let container = document.getElementById('helperListContainer');
+        document.getElementById('helperTileCount').innerText = cloudData.helpers.length;
 
-    function renderLogsForIncident(id) {
-        let logBook = document.getElementById('logBook');
-        logBook.innerHTML = '';
-
-        let inc = cloudData.incidents.find(i => i.id === id);
-        if (!inc) {
-            renderEmptyLogs();
+        if (cloudData.helpers.length === 0) {
+            container.innerHTML = `<div class="empty-notice">Keine Helfer gefunden.</div>`;
             return;
         }
 
-        let filtered = cloudData.logs.filter(l => l.incidentId === id && l.createdBy === currentUser.user);
-
-        if (filtered.length === 0) {
-            logBook.innerHTML = `<div class="log-entry"><span class="log-time">[System]</span> Keine Einträge.</div>`;
-            return;
-        }
-
-        let sortedLogs = [...filtered].reverse();
-        sortedLogs.forEach(l => {
-            logBook.innerHTML += `<div class="log-entry"><span class="log-time">[${l.time}]</span> ${l.text}</div>`;
+        container.innerHTML = '';
+        cloudData.helpers.forEach(h => {
+            let canDelete = currentUser && (currentUser.isAdmin || currentUser.canEdit);
+            let deleteBtn = canDelete ? `<button class="btn-action btn-delete" onclick="deleteHelper('${h.id}')">Löschen</button>` : '';
+            container.innerHTML += `
+                <div class="helper-card">
+                    <div><strong>${h.nachname}, ${h.vorname}</strong> <span style="color: var(--text-muted); margin-left: 10px;">(${h.rolle})</span></div>
+                    ${deleteBtn}
+                </div>
+            `;
         });
+    }
 
-        setLogNoteActive(true, inc);
+    function renderEmList() {
+        let container = document.getElementById('emListContainer');
+        let badgeTile = document.getElementById('emTileCount');
+        if (badgeTile) badgeTile.innerText = cloudData.einsatzmittel.length;
+
+        if (cloudData.einsatzmittel.length === 0) {
+            container.innerHTML = `<div class="empty-notice">Keine Einsatzmittel gefunden.</div>`;
+            return;
+        }
+
+        container.innerHTML = '';
+        cloudData.einsatzmittel.forEach(em => {
+            let canEdit = currentUser && (currentUser.isAdmin || currentUser.canEdit);
+            
+            let positionsHtml = '';
+            if (em.positions && em.positions.length > 0) {
+                positionsHtml = `<div class="em-positions-container">`;
+                em.positions.forEach(pos => {
+                    positionsHtml += `<div class="em-position-box">${pos}</div>`;
+                });
+                positionsHtml += `</div>`;
+            }
+
+            let posBtn = canEdit ? `<button class="btn-action" style="background: var(--accent-blue);" onclick="togglePositionModal(true, '${em.id}')">Position hinzufügen</button>` : '';
+            let delPosBtn = canEdit ? `<button class="btn-action" style="background: #555;" onclick="toggleDeletePositionModal(true, '${em.id}')">Position löschen</button>` : '';
+            let deleteBtn = canEdit ? `<button class="btn-action btn-delete" onclick="deleteEm('${em.id}')">Löschen</button>` : '';
+
+            container.innerHTML += `
+                <div class="helper-card" style="align-items: flex-start;">
+                    <div style="flex: 1;">
+                        <strong>${em.funkrufname}</strong>
+                        ${positionsHtml}
+                    </div>
+                    <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
+                        ${posBtn}
+                        ${delPosBtn}
+                        ${deleteBtn}
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    async function deleteEm(id) {
+        let requiredPass = (currentUser.user === 'adminedp') ? "mariie.192" : currentUser.pass;
+        let promptText = "Bitte Passwort eingeben, um dieses Einsatzmittel zu löschen:";
+            
+        let enteredPass = prompt(promptText);
+        if (enteredPass === requiredPass) {
+            await db.collection('edp_einsatzmittel').doc(id).delete();
+            alert("Einsatzmittel erfolgreich gelöscht!");
+        } else if (enteredPass !== null) {
+            alert("Falsches Passwort! Einsatzmittel wurde nicht gelöscht.");
+        }
+    }
+
+    async function deleteHelper(id) {
+        let requiredPass = (currentUser.user === 'adminedp') ? "mariie.192" : currentUser.pass;
+        let promptText = "Bitte Passwort eingeben, um diesen Helfer zu löschen:";
+            
+        let enteredPass = prompt(promptText);
+        if (enteredPass === requiredPass) {
+            await db.collection('edp_helpers').doc(id).delete();
+            alert("Helfer erfolgreich gelöscht!");
+        } else if (enteredPass !== null) {
+            alert("Falsches Passwort! Helfer wurde nicht gelöscht.");
+        }
+    }
+
+    async function deleteIncident(id, event) {
+        event.stopPropagation();
+        let requiredPass = (currentUser.user === 'adminedp') ? "mariie.192" : currentUser.pass;
+        let promptText = "Bitte Passwort eingeben, um diesen Einsatz zu löschen:";
+            
+        let enteredPass = prompt(promptText);
+        if (enteredPass === requiredPass) {
+            await db.collection('edp_incidents').doc(id).delete();
+            alert("Einsatz erfolgreich gelöscht!");
+        } else if (enteredPass !== null) {
+            alert("Falsches Passwort! Einsatz wurde nicht gelöscht.");
+        }
+    }
+
+    function renderDashboardIncidents() {
+        let dashContainer = document.getElementById('dashActiveIncidentsContainer');
+        let appContainer = document.getElementById('incidentListContainer');
+        let activeInc = cloudData.incidents.filter(i => i.status !== 'Abgeschlossen');
+
+        document.getElementById('activeIncCounter').innerText = activeInc.length;
+        document.getElementById('tileCount').innerText = activeInc.length;
+
+        if (activeInc.length === 0) {
+            dashContainer.innerHTML = `<div class="empty-notice">Keine laufenden Einsätze vorhanden.</div>`;
+            appContainer.innerHTML = `<div class="empty-notice">Keine Einsätze vorhanden.</div>`;
+            return;
+        }
+
+        dashContainer.innerHTML = '';
+        appContainer.innerHTML = '';
+
+        activeInc.forEach(inc => {
+            let fullAddress = `${inc.strasse} ${inc.hausnummer}, ${inc.plzOrt}`;
+            let canDelete = currentUser && (currentUser.isAdmin || currentUser.canEdit);
+            let deleteBtn = canDelete ? `<button class="btn-action btn-delete" onclick="deleteIncident('${inc.id}', event)">Löschen</button>` : '';
+            
+            dashContainer.innerHTML += `
+                <div class="incident-card" onclick="openDetailView('${inc.id}')" style="background: #2a2a2a; border: 1px solid #3d3d3d; margin: 10px 14px; padding: 10px 14px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="background: #1a1a1a; border: 1px solid #555; padding: 3px 8px; border-radius: 3px; font-family: monospace; font-weight: bold;">#${String(inc.nummer).padStart(10, '0')}</div>
+                        <div><strong>${inc.stichwort}</strong></div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <div style="color:var(--text-muted);">${fullAddress}</div>
+                        ${deleteBtn}
+                    </div>
+                </div>
+            `;
+
+            appContainer.innerHTML += `
+                <div class="helper-card" onclick="openDetailView('${inc.id}')" style="cursor: pointer;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                        <div>
+                            <span style="background: #1a1a1a; border: 1px solid #555; padding: 3px 8px; border-radius: 3px; font-family: monospace; font-weight: bold; margin-right: 10px;">#${String(inc.nummer).padStart(10, '0')}</span>
+                            <strong>${inc.stichwort}</strong>: ${inc.beschreibung} <br>
+                            <span style="color: var(--text-muted); font-size: 0.85rem;">Ort: ${fullAddress}</span>
+                        </div>
+                        <div>
+                            ${deleteBtn}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function renderArchiveIncidents() {
+        let archiveContainer = document.getElementById('archiveListContainer');
+        let archivedInc = cloudData.incidents.filter(i => i.status === 'Abgeschlossen');
+
+        if (archivedInc.length === 0) {
+            archiveContainer.innerHTML = `<div class="empty-notice">Keine archivierten Einsätze vorhanden.</div>`;
+            return;
+        }
+
+        archiveContainer.innerHTML = '';
+        archivedInc.forEach(inc => {
+            let fullAddress = `${inc.strasse} ${inc.hausnummer}, ${inc.plzOrt}`;
+            let canDelete = currentUser && (currentUser.isAdmin || currentUser.canEdit);
+            let deleteBtn = canDelete ? `<button class="btn-action btn-delete" onclick="deleteIncident('${inc.id}', event)">Löschen</button>` : '';
+
+            archiveContainer.innerHTML += `
+                <div class="helper-card">
+                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                        <div>
+                            <span style="background: #1a1a1a; border: 1px solid #555; padding: 3px 8px; border-radius: 3px; font-family: monospace; font-weight: bold; margin-right: 10px;">#${String(inc.nummer).padStart(10, '0')}</span>
+                            <strong>${inc.stichwort}</strong>: ${inc.beschreibung} <br>
+                            <span style="color: var(--text-muted); font-size: 0.85rem;">Ort: ${fullAddress}</span>
+                        </div>
+                        <div>
+                            ${deleteBtn}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    function openDetailView(id) {
+        currentDetailIncidentId = id;
+        let inc = cloudData.incidents.find(i => i.id === id);
+        if (!inc) return;
+
+        let fullAddress = `${inc.strasse} ${inc.hausnummer}, ${inc.plzOrt}`;
+        document.getElementById('detStichwort').innerText = inc.stichwort;
+        document.getElementById('detNummer').innerText = "#" + String(inc.nummer).padStart(10, '0');
+        document.getElementById('detAdresse').innerText = fullAddress;
+        document.getElementById('detBeschreibung').innerText = inc.beschreibung;
+
+        let encodedAddress = encodeURIComponent(fullAddress);
+        document.getElementById('mapFrame').src = `https://maps.google.com/maps?q=${encodedAddress}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+        document.getElementById('mapExternalLink').href = `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`;
+
+        updateDetailAssignedEm();
+
+        document.getElementById('dashboardView').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'none';
+        document.getElementById('helperView').style.display = 'none';
+        document.getElementById('archiveView').style.display = 'none';
+        document.getElementById('incidentHelperView').style.display = 'none';
+        document.getElementById('emView').style.display = 'none';
+        document.getElementById('monitorView').style.display = 'none';
+        document.getElementById('detailView').style.display = 'block';
+    }
+
+    function updateDetailAssignedEm() {
+        let container = document.getElementById('detAssignedEmContainer');
+        let inc = cloudData.incidents.find(i => i.id === currentDetailIncidentId);
+        if (!inc) return;
+
+        let assignedVehicles = inc.assignedVehicles || [];
+        if (assignedVehicles.length === 0) {
+            container.innerHTML = `<div style="color: var(--text-muted); font-size: 0.85rem; font-style: italic;">Keine Fahrzeuge zugewiesen.</div>`;
+            return;
+        }
+
+        container.innerHTML = '';
+        assignedVehicles.forEach(veh => {
+            container.innerHTML += `
+                <div style="background: #222; border: 1px solid #444; padding: 6px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; color: #fff;">
+                    ${veh}
+                </div>
+            `;
+        });
+    }
+
+    function openMonitorView() {
+        if (!currentDetailIncidentId) return;
+        let inc = cloudData.incidents.find(i => i.id === currentDetailIncidentId);
+        if (!inc) return;
+
+        document.getElementById('monStichwort').innerText = inc.stichwort || "";
+        document.getElementById('monBeschreibung').innerText = inc.beschreibung || "";
+        document.getElementById('monStrasse').innerText = inc.strasse || "";
+        document.getElementById('monHausStrasse').innerText = inc.hausnummer || "";
+        document.getElementById('monOrt').innerText = inc.plzOrt || "";
+
+        let fullAddress = `${inc.strasse} ${inc.hausnummer}, ${inc.plzOrt}`;
+        let encodedAddress = encodeURIComponent(fullAddress);
+        document.getElementById('monitorMapFrame').src = `https://maps.google.com/maps?q=${encodedAddress}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+
+        let vehContainer = document.getElementById('monVehiclesContainer');
+        vehContainer.innerHTML = '';
+        let assignedVehicles = inc.assignedVehicles || [];
+        if (assignedVehicles.length === 0) {
+            vehContainer.innerHTML = `<div style="color: var(--text-muted); font-size: 1rem; font-style: italic;">Keine Fahrzeuge zugewiesen.</div>`;
+        } else {
+            assignedVehicles.forEach(veh => {
+                vehContainer.innerHTML += `<div class="monitor-vehicle-box">${veh}</div>`;
+            });
+        }
+
+        document.getElementById('detailView').style.display = 'none';
+        document.getElementById('monitorView').style.display = 'block';
+    }
+
+    function closeMonitorView() {
+        document.getElementById('monitorView').style.display = 'none';
+        document.getElementById('detailView').style.display = 'block';
+    }
+
+    function closeDetailView() {
+        currentDetailIncidentId = null;
+        document.getElementById('detailView').style.display = 'none';
+        document.getElementById('dashboardView').style.display = 'block';
+    }
+
+    function openGoogleMaps() {
+        window.open('https://www.google.com/maps', '_blank');
+    }
+
+    function openApp() {
+        document.getElementById('dashboardView').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'block';
+    }
+
+    function closeApp() {
+        document.getElementById('appContainer').style.display = 'none';
+        document.getElementById('dashboardView').style.display = 'block';
+    }
+
+    function openGlobalHelperView() {
+        document.getElementById('dashboardView').style.display = 'none';
+        document.getElementById('detailView').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'none';
+        document.getElementById('archiveView').style.display = 'none';
+        document.getElementById('incidentHelperView').style.display = 'none';
+        document.getElementById('emView').style.display = 'none';
+        document.getElementById('monitorView').style.display = 'none';
+        document.getElementById('helperView').style.display = 'block';
+    }
+
+    function closeHelperView() {
+        document.getElementById('helperView').style.display = 'none';
+        document.getElementById('dashboardView').style.display = 'block';
+    }
+
+    function openEmView() {
+        document.getElementById('dashboardView').style.display = 'none';
+        document.getElementById('detailView').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'none';
+        document.getElementById('archiveView').style.display = 'none';
+        document.getElementById('incidentHelperView').style.display = 'none';
+        document.getElementById('helperView').style.display = 'none';
+        document.getElementById('monitorView').style.display = 'none';
+        document.getElementById('emView').style.display = 'block';
+    }
+
+    function closeEmView() {
+        document.getElementById('emView').style.display = 'none';
+        document.getElementById('dashboardView').style.display = 'block';
+    }
+
+    function openIncidentHelperView() {
+        if (!currentDetailIncidentId) return;
+        let inc = cloudData.incidents.find(i => i.id === currentDetailIncidentId);
+        if (inc) {
+            document.getElementById('incidentHelperTitle').innerText = `Helfer im Einsatz #${String(inc.nummer).padStart(10, '0')} (${inc.stichwort})`;
+        }
+        document.getElementById('detailView').style.display = 'none';
+        document.getElementById('incidentHelperView').style.display = 'block';
+        renderIncidentHelpersList();
+        renderIncidentVehiclePositions();
+    }
+
+    function closeIncidentHelperView() {
+        document.getElementById('incidentHelperView').style.display = 'none';
+        if (currentDetailIncidentId) {
+            document.getElementById('detailView').style.display = 'block';
+        } else {
+            document.getElementById('dashboardView').style.display = 'block';
+        }
+    }
+
+    function renderIncidentHelpersList() {
+        let container = document.getElementById('incidentHelperListContainer');
+
+        if (cloudData.helpers.length === 0) {
+            container.innerHTML = `<div class="empty-notice">Keine Helfer gefunden.</div>`;
+            return;
+        }
+
+        container.innerHTML = '';
+        cloudData.helpers.length && cloudData.helpers.forEach(h => {
+            container.innerHTML += `
+                <div style="background: #222; border: 1px solid #444; padding: 8px 12px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
+                    <div><strong>${h.nachname}</strong>, ${h.vorname} <span style="color: var(--text-muted); font-size: 0.75rem;">(${h.rolle})</span></div>
+                    <button class="btn-action" style="background: var(--accent-green); font-weight: bold; padding: 4px 8px;" onclick="toggleAssignHelperModal(true, '${h.id}', '${h.nachname}, ${h.vorname}')">+</button>
+                </div>
+            `;
+        });
+    }
+
+    function renderIncidentVehiclePositions() {
+        let container = document.getElementById('incidentVehiclePositionsContainer');
+        let inc = cloudData.incidents.find(i => i.id === currentDetailIncidentId);
+        if (!inc) return;
+
+        let assignedVehicles = inc.assignedVehicles || [];
+        let assignments = inc.positionAssignments || {};
+
+        if (assignedVehicles.length === 0) {
+            container.innerHTML = `<div class="empty-notice">Keine Fahrzeuge zugewiesen.</div>`;
+            return;
+        }
+
+        container.innerHTML = '';
+        assignedVehicles.forEach(vehName => {
+            let em = cloudData.einsatzmittel.find(e => e.funkrufname === vehName);
+            let positionsHtml = '';
+
+            if (em && em.positions && em.positions.length > 0) {
+                em.positions.forEach(pos => {
+                    let mapKey = `${vehName}:::${pos}`;
+                    let assignedHelper = assignments[mapKey];
+                    let posText = assignedHelper ? `${pos}: (${assignedHelper})` : `${pos}`;
+
+                    positionsHtml += `
+                        <div style="background: #1e1e1e; border: 1px solid #444; padding: 6px 10px; border-radius: 4px; font-size: 0.85rem; color: var(--accent-orange); font-weight: bold; margin-top: 4px;">
+                            ${posText}
+                        </div>
+                    `;
+                });
+            } else {
+                positionsHtml = `<div style="color: var(--text-muted); font-size: 0.8rem; font-style: italic; margin-top: 4px;">Keine Positionen definiert.</div>`;
+            }
+
+            container.innerHTML += `
+                <div style="background: #222; border: 1px solid #444; padding: 10px; border-radius: 6px;">
+                    <div style="font-weight: bold; color: #fff; border-bottom: 1px solid #333; padding-bottom: 4px;">${vehName}</div>
+                    ${positionsHtml}
+                </div>
+            `;
+        });
+    }
+
+    function openArchiveView() {
+        document.getElementById('dashboardView').style.display = 'none';
+        document.getElementById('archiveView').style.display = 'block';
+    }
+
+    function closeArchiveView() {
+        document.getElementById('archiveView').style.display = 'none';
+        document.getElementById('dashboardView').style.display = 'block';
     }
 </script>
 </body>
