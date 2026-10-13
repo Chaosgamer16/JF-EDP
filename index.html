@@ -24,26 +24,26 @@
             --border-color: #3f3f3f;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg-color); color: var(--text-color); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
 
         /* Login */
         #loginScreen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #121212; display: flex; justify-content: center; align-items: center; z-index: 9999;
+            background: #121212; display: flex; justify-content: center; align-items: center; z-index: 9999; padding: 15px;
         }
         .login-box {
-            background: var(--panel-bg); padding: 30px; border-radius: 8px; width: 350px; border: 1px solid var(--border-color);
+            background: var(--panel-bg); padding: 30px; border-radius: 8px; width: 350px; max-width: 100%; border: 1px solid var(--border-color);
         }
         .login-box h2 { color: #fff; margin-bottom: 20px; text-align: center; border-bottom: 2px solid var(--accent-red); padding-bottom: 10px; }
         .form-group { margin-bottom: 12px; }
         .form-group label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 1rem; }
         
         /* Angemeldet bleiben Toggle Button */
         .toggle-btn {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #444;
             border-radius: 4px;
             font-weight: bold;
@@ -56,34 +56,25 @@
             color: #fff;
             border-color: #555;
         }
-        .toggle-btn.no:hover {
-            background: #3a3a3a;
-        }
         .toggle-btn.yes {
             background: var(--accent-green);
             color: #fff;
             border-color: #4caf50;
         }
-        .toggle-btn.yes:hover {
-            background: #2e7d32;
-        }
 
-        .login-btn { background: var(--accent-red); color: white; border: none; padding: 8px; width: 100%; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px; }
-        .login-btn:hover { background: #b71c1c; }
+        .login-btn { background: var(--accent-red); color: white; border: none; padding: 10px; width: 100%; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px; font-size: 1rem; }
 
         /* Header */
-        header { background: #111; border-bottom: 1px solid #333; padding: 6px 16px; display: flex; justify-content: space-between; align-items: center; height: 48px; }
+        header { background: #111; border-bottom: 1px solid #333; padding: 6px 16px; display: flex; justify-content: space-between; align-items: center; min-height: 48px; flex-wrap: wrap; gap: 8px; }
         .logo-area { display: flex; align-items: center; gap: 10px; }
         .logo-area h1 { font-size: 1.1rem; letter-spacing: 1px; text-transform: uppercase; color: #fff; }
         .logo-area span { color: var(--accent-red); }
-        .search-bar input { padding: 5px 10px; background: #252525; border: 1px solid #444; border-radius: 4px; color: #fff; width: 280px; }
-        .nav-right { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
-        .btn-action { background: #424242; width: auto; padding: 4px 10px; font-size: 0.75rem; cursor: pointer; border: none; color: white; border-radius: 4px; }
+        .search-bar input { padding: 6px 10px; background: #252525; border: 1px solid #444; border-radius: 4px; color: #fff; width: 280px; max-width: 100%; }
+        .nav-right { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; flex-wrap: wrap; }
+        .btn-action { background: #424242; width: auto; padding: 6px 12px; font-size: 0.8rem; cursor: pointer; border: none; color: white; border-radius: 4px; }
         .btn-action:hover { background: #555; }
         .btn-logout { background: var(--accent-red); }
-        .btn-logout:hover { background: #b71c1c; }
         .btn-delete { background: var(--accent-red); }
-        .btn-delete:hover { background: #8e0000; }
 
         /* Dashboard */
         #dashboardView { display: none; padding: 20px 30px; flex: 1; }
@@ -102,19 +93,18 @@
         .tile span { font-size: 0.72rem; color: #fff; }
 
         /* Einsätze */
-        .einsaetze-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .btn-new-incident { background-color: var(--accent-red); color: white; border: none; padding: 6px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; width: auto; }
-        .btn-new-incident:hover { background-color: #b71c1c; }
+        .einsaetze-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+        .btn-new-incident { background-color: var(--accent-red); color: white; border: none; padding: 8px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; width: auto; }
         .accordion-item { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 4px; overflow: hidden; }
         .accordion-header { padding: 10px 14px; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; background: #232323; }
         .accordion-counter { background: #111; border: 1px solid #444; padding: 1px 6px; border-radius: 3px; font-size: 0.75rem; }
         .empty-notice { padding: 12px 14px; color: var(--text-muted); font-size: 0.85rem; font-style: italic; }
 
-        /* Modals */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; }
-        .modal-content { background: var(--panel-bg); border: 1px solid var(--border-color); padding: 25px; border-radius: 8px; width: 550px; max-width: 95%; max-height: 90vh; overflow-y: auto; overflow-x: hidden; }
+        /* Modals & Responsiveness für Touch-Geräte */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; padding: 15px; overflow-y: auto; }
+        .modal-content { background: var(--panel-bg); border: 1px solid var(--border-color); padding: 25px; border-radius: 8px; width: 550px; max-width: 100%; max-height: 90vh; overflow-y: auto; overflow-x: hidden; }
         .modal-content h3 { color: var(--accent-orange); margin-bottom: 15px; font-size: 1rem; border-bottom: 1px solid #333; padding-bottom: 8px; }
-        .admin-row { background: #1a1a1a; border: 1px solid #333; padding: 8px 12px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem; }
+        .admin-row { background: #1a1a1a; border: 1px solid #333; padding: 8px 12px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem; flex-wrap: wrap; gap: 8px; }
         .badge-admin { background: var(--accent-red); padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; color: #fff; font-weight: bold; }
 
         /* Style für auswählbare Positionen mit grünem Hintergrund */
@@ -145,43 +135,45 @@
 
         /* Andere Ansichten / Apps */
         #appContainer, #helperView, #detailView, #archiveView, #incidentHelperView, #emView, #monitorView { display: none; padding: 20px 30px; flex: 1; }
-        .sub-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .sub-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .btn-primary { background-color: var(--accent-red); color: white; border: none; padding: 8px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; }
-        .btn-primary:hover { background-color: #b71c1c; }
-        .helper-card { background: var(--panel-bg); border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .helper-card { background: var(--panel-bg); border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         
         /* Positions-Boxen unter dem Funkrufnamen */
         .em-positions-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
         .em-position-box { background: #1e1e1e; border: 1px solid #444; border-radius: 4px; padding: 4px 8px; font-size: 0.8rem; color: var(--accent-orange); font-weight: bold; }
 
         /* Einsatz Detail Layout */
-        .detail-layout { display: flex; gap: 20px; height: calc(100vh - 120px); }
-        .detail-left { width: 45%; display: flex; flex-direction: column; gap: 15px; }
-        .detail-right { width: 55%; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
+        .detail-layout { display: flex; gap: 20px; flex-wrap: wrap; }
+        .detail-left { flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px; }
+        .detail-right { flex: 1.2; min-width: 300px; height: 450px; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
         .detail-card { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; }
-        .detail-top-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 12px; }
+        .detail-top-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
         .detail-title { font-size: 1.4rem; font-weight: bold; color: #fff; }
         .detail-number { font-family: monospace; font-size: 1.1rem; color: var(--text-muted); }
         .detail-address { font-size: 0.95rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
         .detail-desc { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
         .detail-btn-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
-        .custom-btn { background: #333; border: 1px solid #555; color: #fff; padding: 6px 12px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 6px; text-decoration: none; }
-        .custom-btn:hover { background: #444; }
+        .custom-btn { background: #333; border: 1px solid #555; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 6px; text-decoration: none; }
         .custom-btn.btn-red-text { color: #e57373; border-color: #552222; }
 
-        /* Monitor Ansicht Layout (Karte kleiner: width: 30%) */
-        .monitor-layout { display: flex; height: calc(100vh - 80px); background: #262626; color: #fff; position: relative; }
-        .monitor-left { flex: 1; padding: 20px 40px 40px 40px; display: flex; flex-direction: column; justify-content: space-between; overflow-y: auto; }
-        .monitor-right { width: 30%; background: #333; position: relative; border-left: 1px solid #444; }
+        /* Monitor Ansicht Layout */
+        .monitor-layout { display: flex; flex-wrap: wrap; min-height: calc(100vh - 80px); background: #262626; color: #fff; position: relative; }
+        .monitor-left { flex: 2; min-width: 300px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
+        .monitor-right { flex: 1; min-width: 300px; background: #333; position: relative; border-left: 1px solid #444; min-height: 300px; }
         .monitor-header-bar { display: flex; align-items: center; margin-bottom: 15px; }
-        .monitor-stichwort-text { font-size: 3.8rem; font-weight: bold; letter-spacing: 2px; color: #ffffff; border-left: 6px solid #ffffff; padding-left: 15px; line-height: 1; }
-        .monitor-beschreibung { font-size: 2.2rem; font-style: italic; color: #ccc; margin-top: 15px; }
-        .monitor-address-block { margin: 30px 0; }
-        .monitor-address-line { font-size: 2.8rem; font-weight: 300; line-height: 1.2; }
+        .monitor-stichwort-text { font-size: 2.8rem; font-weight: bold; letter-spacing: 2px; color: #ffffff; border-left: 6px solid #ffffff; padding-left: 15px; line-height: 1; }
+        .monitor-beschreibung { font-size: 1.8rem; font-style: italic; color: #ccc; margin-top: 15px; }
+        .monitor-address-block { margin: 20px 0; }
+        .monitor-address-line { font-size: 2rem; font-weight: 300; line-height: 1.2; }
         .monitor-vehicles-row { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 20px; }
-        .monitor-vehicle-box { background: #1e1e1e; border: 1px solid #444; padding: 12px 24px; border-radius: 4px; font-size: 1.5rem; font-weight: bold; color: #fff; }
+        .monitor-vehicle-box { background: #1e1e1e; border: 1px solid #444; padding: 10px 20px; border-radius: 4px; font-size: 1.2rem; font-weight: bold; color: #fff; }
         .monitor-back-btn { background: #424242; color: #fff; border: 1px solid #555; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.85rem; margin-bottom: 15px; align-self: flex-start; }
-        .monitor-back-btn:hover { background: #555; }
+
+        @media(max-width: 768px) {
+            #dashboardView, #appContainer, #helperView, #archiveView, #detailView, #incidentHelperView, #emView { padding: 10px 15px; }
+            .tiles-grid { justify-content: center; }
+        }
     </style>
 </head>
 <body>
@@ -209,13 +201,13 @@
     </div>
 </div>
 
-<!-- Universelles Modal für Meldungen & Bestätigungen -->
+<!-- Universelles App-Modal für Meldungen & Bestätigungen -->
 <div id="customModal" class="modal">
     <div class="modal-content" style="width: 400px;">
         <h3 id="customModalTitle">Hinweis</h3>
         <p id="customModalText" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;"></p>
         
-        <!-- Eingabefeld (optional, z.B. für Passwort) -->
+        <!-- Eingabefeld (optional, z.B. für Passwortbestätigung) -->
         <div class="form-group" id="customModalInputGroup" style="display: none;">
             <label id="customModalInputLabel">Passwort eingeben</label>
             <input type="password" id="customModalInputField" placeholder="Passwort">
@@ -233,21 +225,21 @@
     <div class="modal-content">
         <h3>Benutzer-Accounts verwalten & anlegen</h3>
         <form id="addAccountForm">
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px;">
-                <input type="text" id="newAccUser" placeholder="Benutzername" required style="padding: 6px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.85rem; width: 100%;">
-                <input type="password" id="newAccPass" placeholder="Passwort" required style="padding: 6px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.85rem; width: 100%;">
-                <select id="newAccEdit" style="padding: 6px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.85rem; width: 100%;">
+            <div style="display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 10px;">
+                <input type="text" id="newAccUser" placeholder="Benutzername" required style="padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.85rem; width: 100%;">
+                <input type="password" id="newAccPass" placeholder="Passwort" required style="padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.85rem; width: 100%;">
+                <select id="newAccEdit" style="padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.85rem; width: 100%;">
                     <option value="true">Schreibrecht: Ja</option>
                     <option value="false">Schreibrecht: Nein</option>
                 </select>
             </div>
-            <button type="submit" style="background: var(--accent-red); color: white; border: none; padding: 8px; width: 100%; font-weight: bold; border-radius: 4px; cursor: pointer; margin-bottom: 20px;">Account erstellen</button>
+            <button type="submit" style="background: var(--accent-red); color: white; border: none; padding: 10px; width: 100%; font-weight: bold; border-radius: 4px; cursor: pointer; margin-bottom: 20px;">Account erstellen</button>
         </form>
 
         <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">Vorhandene Accounts:</div>
         <div id="accountListContainer"></div>
 
-        <button onclick="toggleAdminModal(false)" style="margin-top: 20px; background: #424242; color: white; border: none; padding: 8px; width: 100%; border-radius: 4px; cursor: pointer;">Schließen</button>
+        <button onclick="toggleAdminModal(false)" style="margin-top: 20px; background: #424242; color: white; border: none; padding: 10px; width: 100%; border-radius: 4px; cursor: pointer;">Schließen</button>
     </div>
 </div>
 
@@ -396,8 +388,8 @@
         <svg width="28" height="28" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#ff6b6b"/><g transform="translate(8, 8)"><rect x="2" y="2" width="36" height="26" rx="4" stroke="#ffffff" stroke-width="3" fill="#121212"/><path d="M15 34H25" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/><path d="M20 28V34" stroke="#ffffff" stroke-width="3"/><path d="M20 10C20 10 14 15 14 18.5C14 20.9853 16.0147 23 18.5 23C20.9853 23 23 20.9853 23 18.5C23 15 20 10 20 10Z" fill="#d32f2f"/><circle cx="20" cy="18" r="2.5" fill="#ffffff"/></g></svg>
         <h1>EDP-Light // <span>Jugendfeuerwehr</span></h1>
     </div>
-    <div style="flex: 1; display: flex; justify-content: center;">
-        <div class="search-bar">
+    <div style="flex: 1; display: flex; justify-content: center; min-width: 200px;">
+        <div class="search-bar" style="width: 100%; max-width: 280px;">
             <input type="text" placeholder="Suchen">
         </div>
     </div>
@@ -529,7 +521,7 @@
 
 <!-- Monitor Ansicht -->
 <div id="monitorView">
-    <div class="monitor-layout">
+    <div class="monitor-layout" style="width: 100%;">
         <div class="monitor-left">
             <div>
                 <button class="monitor-back-btn" onclick="closeMonitorView()">← Zurück</button>
@@ -561,7 +553,7 @@
 <div id="helperView">
     <div class="sub-header">
         <div class="page-title" style="margin:0;">Helfererfassung</div>
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button id="btnOpenHelperModal" class="btn-primary" style="display: none;" onclick="toggleHelperModal(true)">+ Helfer erstellen</button>
             <button onclick="closeHelperView()" style="background: #424242; padding: 8px 14px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Zurück</button>
         </div>
@@ -575,7 +567,7 @@
 <div id="emView">
     <div class="sub-header">
         <div class="page-title" style="margin:0;">Einsatzmittelverwaltung</div>
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <button id="btnOpenEmModal" class="btn-primary" style="display: none;" onclick="toggleEmModal(true)">+ Einsatzmittel hinzufügen</button>
             <button onclick="closeEmView()" style="background: #424242; padding: 8px 14px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Zurück</button>
         </div>
@@ -592,9 +584,9 @@
         <button onclick="closeIncidentHelperView()" style="background: #424242; padding: 8px 14px; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Zurück zum Einsatz</button>
     </div>
 
-    <div style="display: flex; gap: 20px; align-items: flex-start;">
+    <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
         <!-- Linke Spalte: Helfer -->
-        <div style="width: 45%; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 15px;">
+        <div style="flex: 1; min-width: 280px; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 15px;">
             <div style="font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 6px;">Verfügbare Helfer</div>
             <div id="incidentHelperListContainer" style="display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - 220px); overflow-y: auto;">
                 <div class="empty-notice">Keine Helfer gefunden.</div>
@@ -602,7 +594,7 @@
         </div>
 
         <!-- Rechte Spalte: Fahrzeuge & Positionen -->
-        <div style="width: 55%; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 15px;">
+        <div style="flex: 1.2; min-width: 280px; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 15px;">
             <div style="font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 6px;">Zugewiesene Fahrzeuge & Positionen</div>
             <div id="incidentVehiclePositionsContainer" style="display: flex; flex-direction: column; gap: 12px; max-height: calc(100vh - 220px); overflow-y: auto;">
                 <div class="empty-notice">Keine Fahrzeuge zugewiesen.</div>
@@ -635,7 +627,7 @@
         einsatzmittel: []
     };
 
-    // Universelle Modal-Funktion für Alerts & Bestätigungen
+    // Universelles App-Modal für Meldungen & Passwörter (ersetzt alle Browser-Popups)
     function showCustomModal(title, text, showInput, onConfirmText, onConfirmCallback) {
         document.getElementById('customModalTitle').innerText = title;
         document.getElementById('customModalText').innerText = text;
@@ -653,12 +645,7 @@
             cancelBtn.style.display = 'block';
         } else {
             inputGroup.style.display = 'none';
-            // Wenn es nur eine reine Meldung ist (kein Input/Abbrechen nötig), verstecken wir Abbrechen
-            if (!onConfirmCallback) {
-                cancelBtn.style.display = 'none';
-            } else {
-                cancelBtn.style.display = 'block';
-            }
+            cancelBtn.style.display = 'none';
         }
 
         confirmBtn.onclick = function() {
@@ -673,7 +660,7 @@
         };
 
         document.getElementById('customModal').style.display = 'flex';
-        if (showInput) inputField.focus();
+        if (showInput) setTimeout(() => inputField.focus(), 100);
     }
 
     function closeCustomModal() {
@@ -1276,7 +1263,7 @@
             let deleteBtn = canDelete ? `<button class="btn-action btn-delete" onclick="deleteIncident('${inc.id}', event)">Löschen</button>` : '';
             
             dashContainer.innerHTML += `
-                <div class="incident-card" onclick="openDetailView('${inc.id}')" style="background: #2a2a2a; border: 1px solid #3d3d3d; margin: 10px 14px; padding: 10px 14px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+                <div class="incident-card" onclick="openDetailView('${inc.id}')" style="background: #2a2a2a; border: 1px solid #3d3d3d; margin: 10px 14px; padding: 10px 14px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; flex-wrap: wrap; gap: 10px;">
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <div style="background: #1a1a1a; border: 1px solid #555; padding: 3px 8px; border-radius: 3px; font-family: monospace; font-weight: bold;">#${String(inc.nummer).padStart(10, '0')}</div>
                         <div><strong>${inc.stichwort}</strong></div>
@@ -1290,7 +1277,7 @@
 
             appContainer.innerHTML += `
                 <div class="helper-card" onclick="openDetailView('${inc.id}')" style="cursor: pointer;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; flex-wrap: wrap; gap: 10px;">
                         <div>
                             <span style="background: #1a1a1a; border: 1px solid #555; padding: 3px 8px; border-radius: 3px; font-family: monospace; font-weight: bold; margin-right: 10px;">#${String(inc.nummer).padStart(10, '0')}</span>
                             <strong>${inc.stichwort}</strong>: ${inc.beschreibung} <br>
@@ -1322,7 +1309,7 @@
 
             archiveContainer.innerHTML += `
                 <div class="helper-card">
-                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; flex-wrap: wrap; gap: 10px;">
                         <div>
                             <span style="background: #1a1a1a; border: 1px solid #555; padding: 3px 8px; border-radius: 3px; font-family: monospace; font-weight: bold; margin-right: 10px;">#${String(inc.nummer).padStart(10, '0')}</span>
                             <strong>${inc.stichwort}</strong>: ${inc.beschreibung} <br>
@@ -1504,7 +1491,7 @@
         container.innerHTML = '';
         cloudData.helpers.length && cloudData.helpers.forEach(h => {
             container.innerHTML += `
-                <div style="background: #222; border: 1px solid #444; padding: 8px 12px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="background: #222; border: 1px solid #444; padding: 8px 12px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                     <div><strong>${h.nachname}</strong>, ${h.vorname} <span style="color: var(--text-muted); font-size: 0.75rem;">(${h.rolle})</span></div>
                     <button class="btn-action" style="background: var(--accent-green); font-weight: bold; padding: 4px 8px;" onclick="toggleAssignHelperModal(true, '${h.id}', '${h.nachname}, ${h.vorname}')">+</button>
                 </div>
