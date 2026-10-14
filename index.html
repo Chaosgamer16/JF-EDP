@@ -133,6 +133,12 @@
             accent-color: #4caf50;
         }
 
+        /* Galerie-Style für Notiz-Bilder */
+        .notes-gallery { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .notes-img-item { position: relative; width: 100px; height: 100px; border: 1px solid #555; border-radius: 4px; overflow: hidden; background: #111; }
+        .notes-img-item img { width: 100%; height: 100%; object-fit: cover; }
+        .notes-img-del { position: absolute; top: 2px; right: 2px; background: rgba(211,47,47,0.85); color: #fff; border: none; border-radius: 3px; cursor: pointer; padding: 2px 6px; font-size: 0.7rem; font-weight: bold; }
+
         /* Andere Ansichten / Apps */
         #appContainer, #helperView, #detailView, #archiveView, #incidentHelperView, #emView, #monitorView { display: none; padding: 20px 30px; flex: 1; }
         .sub-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
@@ -207,7 +213,6 @@
         <h3 id="customModalTitle">Hinweis</h3>
         <p id="customModalText" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;"></p>
         
-        <!-- Eingabefeld (optional, z.B. für Passwortbestätigung) -->
         <div class="form-group" id="customModalInputGroup" style="display: none;">
             <label id="customModalInputLabel">Passwort eingeben</label>
             <input type="password" id="customModalInputField" placeholder="Passwort">
@@ -217,6 +222,36 @@
             <button type="button" id="customModalConfirmBtn" class="btn-action" style="flex: 1; padding: 10px; font-weight: bold; background: var(--accent-red);">OK</button>
             <button type="button" id="customModalCancelBtn" class="btn-action" style="flex: 1; background: #424242;" onclick="closeCustomModal()">Abbrechen</button>
         </div>
+    </div>
+</div>
+
+<!-- Modal: Einsatz-Notizen & Fotos -->
+<div id="notesModal" class="modal">
+    <div class="modal-content">
+        <h3>Einsatznotizen & Fotoerfassung</h3>
+        <form id="notesForm">
+            <div class="form-group">
+                <label>Info / Notiztext</label>
+                <textarea id="noteTextInput" rows="4" placeholder="Hier zusätzliche Einsatzinfos eintragen..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Foto aufnehmen (Kamera) oder hochladen</label>
+                <input type="file" id="noteImageInput" accept="image/*" capture="environment" style="background: #222; border: 1px solid #444; padding: 6px; width: 100%; border-radius: 4px; color: #fff;">
+            </div>
+
+            <div class="form-group">
+                <label>Angehängte Fotos:</label>
+                <div id="notesGalleryContainer" class="notes-gallery">
+                    <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Keine Fotos vorhanden.</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn-primary" style="flex: 1;">Notiz speichern</button>
+                <button type="button" class="btn-action" style="flex: 1; background: #424242;" onclick="toggleNotesModal(false)">Schließen</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -311,9 +346,7 @@
             <input type="hidden" id="delPosEmId">
             <div class="form-group">
                 <label>Wähle die zu löschende(n) Position(en) aus:</label>
-                <div id="deletePositionRadioContainer" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px; max-height: 250px; overflow-y: auto;">
-                    <!-- Dynamische Checkboxes -->
-                </div>
+                <div id="deletePositionRadioContainer" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px; max-height: 250px; overflow-y: auto;"></div>
             </div>
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button type="submit" class="btn-action btn-delete" style="flex: 1; padding: 10px; font-weight: bold;">Ausgewählte Position(en) löschen</button>
@@ -330,10 +363,8 @@
         <form id="assignHelperForm">
             <input type="hidden" id="assignHelperId">
             <div class="form-group">
-                <label>Wähle eine Position aus:</label>
-                <div id="assignPositionRadioContainer" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px; max-height: 250px; overflow-y: auto;">
-                    <!-- Dynamische Radio-Buttons mit Fahrzeugen & Positionen -->
-                </div>
+                <label>Wähle eine Position oder das Fahrzeug (falls keine Position) aus:</label>
+                <div id="assignPositionRadioContainer" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px; max-height: 250px; overflow-y: auto;"></div>
             </div>
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button type="submit" class="btn-primary" style="flex: 1;">Zuordnen</button>
@@ -370,9 +401,7 @@
             </div>
             <div class="form-group">
                 <label>Fahrzeuge auswählen</label>
-                <div id="incidentEmCheckboxContainer" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto; background: #1e1e1e; padding: 8px; border-radius: 4px; border: 1px solid #444;">
-                    <!-- Dynamische Fahrzeug-Checkboxen -->
-                </div>
+                <div id="incidentEmCheckboxContainer" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto; background: #1e1e1e; padding: 8px; border-radius: 4px; border: 1px solid #444;"></div>
             </div>
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button type="submit" class="btn-primary" style="flex: 1;">Einsatz anlegen</button>
@@ -494,7 +523,7 @@
                 </div>
                 <div class="detail-btn-grid">
                     <button class="custom-btn" id="btnCompleteIncident" style="background: #b71c1c; border-color: #e53935; font-weight: bold;">🚨 Einsatz beenden</button>
-                    <button class="custom-btn">📝 Notiz</button>
+                    <button class="custom-btn" onclick="toggleNotesModal(true)">📝 Notiz</button>
                     <button class="custom-btn" onclick="openIncidentHelperView()">🧑‍🚒 Helfer</button>
                     <button class="custom-btn" onclick="openMonitorView()" style="background: var(--accent-blue); border-color: #1976d2; font-weight: bold;">🖥️ Monitor Ansicht</button>
                     <button class="custom-btn btn-red-text" onclick="closeDetailView()">← Startseite</button>
@@ -576,7 +605,7 @@
     </div>
 </div>
 
-<!-- Extra: Helfer im Einsatz Ansicht (Zweigeteilt) -->
+<!-- Extra: Helfer im Einsatz Ansicht -->
 <div id="incidentHelperView">
     <div class="sub-header">
         <div class="page-title" id="incidentHelperTitle" style="margin:0;">Helfer im Einsatz</div>
@@ -584,7 +613,6 @@
     </div>
 
     <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
-        <!-- Linke Spalte: Helfer -->
         <div style="flex: 1; min-width: 280px; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 15px;">
             <div style="font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 6px;">Verfügbare Helfer</div>
             <div id="incidentHelperListContainer" style="display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - 220px); overflow-y: auto;">
@@ -592,7 +620,6 @@
             </div>
         </div>
 
-        <!-- Rechte Spalte: Fahrzeuge & Positionen -->
         <div style="flex: 1.2; min-width: 280px; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 15px;">
             <div style="font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 6px;">Zugewiesene Fahrzeuge & Positionen</div>
             <div id="incidentVehiclePositionsContainer" style="display: flex; flex-direction: column; gap: 12px; max-height: calc(100vh - 220px); overflow-y: auto;">
@@ -630,7 +657,6 @@
     let unsubHelpers = null;
     let unsubEm = null;
 
-    // Universelles App-Modal für Meldungen & Passwörter (ersetzt alle Browser-Popups)
     function showCustomModal(title, text, showInput, onConfirmText, onConfirmCallback, cancelText = "Abbrechen", showCancel = true) {
         document.getElementById('customModalTitle').innerText = title;
         document.getElementById('customModalText').innerText = text;
@@ -643,11 +669,7 @@
         confirmBtn.innerText = onConfirmText || "OK";
         cancelBtn.innerText = cancelText;
 
-        if (showCancel) {
-            cancelBtn.style.display = 'block';
-        } else {
-            cancelBtn.style.display = 'none';
-        }
+        cancelBtn.style.display = showCancel ? 'block' : 'none';
 
         if (showInput) {
             inputGroup.style.display = 'block';
@@ -675,7 +697,6 @@
         document.getElementById('customModal').style.display = 'none';
     }
 
-    // Toggle Funktion für den "Angemeldet bleiben" Button
     function toggleStayLoggedIn() {
         let btn = document.getElementById('stayLoggedInToggle');
         if (btn.classList.contains('no')) {
@@ -702,9 +723,7 @@
 
         db.collection('edp_accounts').onSnapshot(snap => {
             cloudData.accounts = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            
             checkAutoLogin();
-
             if (currentUser && currentUser.isAdmin) {
                 renderAccountsList();
             }
@@ -713,60 +732,60 @@
 
     initFirebaseSync();
 
-function subscribeUserData(username) {
-    if (unsubIncidents) unsubIncidents();
-    if (unsubHelpers) unsubHelpers();
-    if (unsubEm) unsubEm();
+    function subscribeUserData(username) {
+        if (unsubIncidents) unsubIncidents();
+        if (unsubHelpers) unsubHelpers();
+        if (unsubEm) unsubEm();
 
-    // Bei Einsätzen filtern
-    unsubIncidents = db.collection('edp_incidents').onSnapshot(snap => {
-        cloudData.incidents = snap.docs
-            .map(doc => ({ id: doc.id, ...doc.data() }))
-            .filter(item => {
-                // Falls kein createdBy existiert, gehört es historisch zum adminedp
-                let owner = item.createdBy || 'adminedp';
-                return owner === username;
-            });
-        renderDashboardIncidents();
-        renderArchiveIncidents();
-        if (currentDetailIncidentId) {
-            renderIncidentHelpersList();
-            updateDetailAssignedEm();
-            renderIncidentVehiclePositions();
-        }
-    });
+        unsubIncidents = db.collection('edp_incidents').onSnapshot(snap => {
+            cloudData.incidents = snap.docs
+                .map(doc => ({ id: doc.id, ...doc.data() }))
+                .filter(item => {
+                    let owner = item.createdBy || 'adminedp';
+                    return owner === username;
+                });
+            renderDashboardIncidents();
+            renderArchiveIncidents();
+            if (currentDetailIncidentId) {
+                renderIncidentHelpersList();
+                updateDetailAssignedEm();
+                renderIncidentVehiclePositions();
+            }
+        });
 
-    // Bei Helfern filtern
-    unsubHelpers = db.collection('edp_helpers').onSnapshot(snap => {
-        cloudData.helpers = snap.docs
-            .map(doc => ({ id: doc.id, ...doc.data() }))
-            .filter(item => {
-                let owner = item.createdBy || 'adminedp';
-                return owner === username;
-            });
-        renderHelpersList();
-        if (currentDetailIncidentId) {
-            renderIncidentHelpersList();
-        }
-    });
+        unsubHelpers = db.collection('edp_helpers').onSnapshot(snap => {
+            cloudData.helpers = snap.docs
+                .map(doc => ({ id: doc.id, ...doc.data() }))
+                .filter(item => {
+                    let owner = item.createdBy || 'adminedp';
+                    return owner === username;
+                });
+            renderHelpersList();
+            if (currentDetailIncidentId) {
+                renderIncidentHelpersList();
+            }
+        });
 
-    // Bei Einsatzmitteln filtern
-    unsubEm = db.collection('edp_einsatzmittel').onSnapshot(snap => {
-        cloudData.einsatzmittel = snap.docs
-            .map(doc => ({ id: doc.id, ...doc.data() }))
-            .filter(item => {
-                let owner = item.createdBy || 'adminedp';
-                return owner === username;
-            });
-        renderEmList();
-        if (document.getElementById('incidentModal').style.display === 'flex') {
-            renderIncidentEmCheckboxes();
-        }
-        if (currentDetailIncidentId) {
-            renderIncidentVehiclePositions();
-        }
-    });
-}
+        unsubEm = db.collection('edp_einsatzmittel').onSnapshot(snap => {
+            let list = snap.docs
+                .map(doc => ({ id: doc.id, ...doc.data() }))
+                .filter(item => {
+                    let owner = item.createdBy || 'adminedp';
+                    return owner === username;
+                });
+            
+            list.sort((a, b) => (a.orderIdx || 0) - (b.orderIdx || 0));
+            cloudData.einsatzmittel = list;
+
+            renderEmList();
+            if (document.getElementById('incidentModal').style.display === 'flex') {
+                renderIncidentEmCheckboxes();
+            }
+            if (currentDetailIncidentId) {
+                renderIncidentVehiclePositions();
+            }
+        });
+    }
 
     function checkAutoLogin() {
         if (currentUser) return;
@@ -863,6 +882,86 @@ function subscribeUserData(username) {
         document.getElementById('loginErr').innerText = '';
     }
 
+    /* Notiz & Foto Funktionen */
+    function toggleNotesModal(show) {
+        let modal = document.getElementById('notesModal');
+        modal.style.display = show ? 'flex' : 'none';
+        if (show && currentDetailIncidentId) {
+            let inc = cloudData.incidents.find(i => i.id === currentDetailIncidentId);
+            if (inc) {
+                document.getElementById('noteTextInput').value = inc.notesText || '';
+                renderNotesGallery(inc.notesImages || []);
+            }
+        } else {
+            document.getElementById('notesForm').reset();
+        }
+    }
+
+    function renderNotesGallery(images) {
+        let container = document.getElementById('notesGalleryContainer');
+        if (!images || images.length === 0) {
+            container.innerHTML = `<div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Keine Fotos vorhanden.</div>`;
+            return;
+        }
+
+        container.innerHTML = '';
+        images.forEach((imgBase64, index) => {
+            container.innerHTML += `
+                <div class="notes-img-item">
+                    <img src="${imgBase64}" alt="Foto ${index + 1}">
+                    <button type="button" class="notes-img-del" onclick="deleteNoteImage(${index})">✕</button>
+                </div>
+            `;
+        });
+    }
+
+    async function deleteNoteImage(index) {
+        if (!currentDetailIncidentId) return;
+        let inc = cloudData.incidents.find(i => i.id === currentDetailIncidentId);
+        if (!inc || !inc.notesImages) return;
+
+        let imgs = inc.notesImages;
+        imgs.splice(index, 1);
+
+        await db.collection('edp_incidents').doc(currentDetailIncidentId).update({ notesImages: imgs });
+        renderNotesGallery(imgs);
+    }
+
+    document.getElementById('notesForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!currentDetailIncidentId) return;
+
+        let noteText = document.getElementById('noteTextInput').value.trim();
+        let fileInput = document.getElementById('noteImageInput');
+        let inc = cloudData.incidents.find(i => i.id === currentDetailIncidentId);
+        let currentImgs = (inc && inc.notesImages) ? [...inc.notesImages] : [];
+
+        if (fileInput.files && fileInput.files[0]) {
+            let reader = new FileReader();
+            reader.onload = async function(evt) {
+                let base64Image = evt.target.result;
+                currentImgs.push(base64Image);
+
+                await db.collection('edp_incidents').doc(currentDetailIncidentId).update({
+                    notesText: noteText,
+                    notesImages: currentImgs
+                });
+
+                fileInput.value = '';
+                toggleNotesModal(false);
+                showCustomModal("Erfolg", "Notiz & Foto erfolgreich gespeichert!", false, "OK", null, "Abbrechen", true);
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+        } else {
+            await db.collection('edp_incidents').doc(currentDetailIncidentId).update({
+                notesText: noteText,
+                notesImages: currentImgs
+            });
+            toggleNotesModal(false);
+            showCustomModal("Erfolg", "Notiz erfolgreich gespeichert!", false, "OK", null, "Abbrechen", true);
+        }
+    });
+
     function toggleAdminModal(show) {
         document.getElementById('adminModal').style.display = show ? 'flex' : 'none';
         if (show) renderAccountsList();
@@ -928,24 +1027,34 @@ function subscribeUserData(username) {
                 return;
             }
 
-            let hasPositions = false;
+            let hasItems = false;
             inc.assignedVehicles.forEach(vehName => {
                 let em = cloudData.einsatzmittel.find(e => e.funkrufname === vehName);
-                if (em && em.positions && em.positions.length > 0) {
-                    em.positions.forEach(pos => {
-                        hasPositions = true;
+                if (em) {
+                    if (em.positions && em.positions.length > 0) {
+                        em.positions.forEach(pos => {
+                            hasItems = true;
+                            container.innerHTML += `
+                                <label class="pos-select-label">
+                                    <input type="radio" name="selectedAssignPosition" value="${vehName}:::${pos}">
+                                    <span><strong>${vehName}</strong> –${pos}</span>
+                                </label>
+                            `;
+                        });
+                    } else {
+                        hasItems = true;
                         container.innerHTML += `
                             <label class="pos-select-label">
-                                <input type="radio" name="selectedAssignPosition" value="${vehName}:::${pos}">
-                                <span><strong>${vehName}</strong> –${pos}</span>
+                                <input type="radio" name="selectedAssignPosition" value="${vehName}:::_FahrzeugBesatzung">
+                                <span><strong>${vehName}</strong> (Fahrzeug / Allgemeine Besatzung)</span>
                             </label>
                         `;
-                    });
+                    }
                 }
             });
 
-            if (!hasPositions) {
-                container.innerHTML = `<div style="color: var(--text-muted); font-size: 0.85rem;">Keine Positionen für die zugewiesenen Fahrzeuge definiert.</div>`;
+            if (!hasItems) {
+                container.innerHTML = `<div style="color: var(--text-muted); font-size: 0.85rem;">Keine Fahrzeuge oder Positionen verfügbar.</div>`;
             }
         } else {
             document.getElementById('assignHelperForm').reset();
@@ -973,7 +1082,13 @@ function subscribeUserData(username) {
 
         let assignments = inc.positionAssignments || {};
         let mapKey = `${vehName}:::${posName}`;
-        assignments[mapKey] = helperFullName;
+        
+        if (!assignments[mapKey]) {
+            assignments[mapKey] = [];
+        }
+        if (!assignments[mapKey].includes(helperFullName)) {
+            assignments[mapKey].push(helperFullName);
+        }
 
         await db.collection('edp_incidents').doc(currentDetailIncidentId).update({ positionAssignments: assignments });
         toggleAssignHelperModal(false);
@@ -1046,10 +1161,33 @@ function subscribeUserData(username) {
         if (!currentUser || (!currentUser.isAdmin && !currentUser.canEdit)) return;
 
         let funkrufname = document.getElementById('emFunkrufname').value.trim();
+        let maxOrder = cloudData.einsatzmittel.length > 0 ? Math.max(...cloudData.einsatzmittel.map(e => e.orderIdx || 0)) + 1 : 1;
 
-        await db.collection('edp_einsatzmittel').add({ funkrufname, positions: [], createdBy: currentUser.user });
+        await db.collection('edp_einsatzmittel').add({ 
+            funkrufname, 
+            positions: [], 
+            orderIdx: maxOrder,
+            createdBy: currentUser.user 
+        });
         toggleEmModal(false);
     });
+
+    async function moveEm(id, direction) {
+        let index = cloudData.einsatzmittel.findIndex(e => e.id === id);
+        if (index === -1) return;
+
+        let targetIndex = index + direction;
+        if (targetIndex < 0 || targetIndex >= cloudData.einsatzmittel.length) return;
+
+        let currentItem = cloudData.einsatzmittel[index];
+        let targetItem = cloudData.einsatzmittel[targetIndex];
+
+        let tempOrder = currentItem.orderIdx || index;
+        let newTargetOrder = targetItem.orderIdx || targetIndex;
+
+        await db.collection('edp_einsatzmittel').doc(currentItem.id).update({ orderIdx: newTargetOrder });
+        await db.collection('edp_einsatzmittel').doc(targetItem.id).update({ orderIdx: tempOrder });
+    }
 
     document.getElementById('addPositionForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -1112,6 +1250,8 @@ function subscribeUserData(username) {
             plzOrt,
             assignedVehicles: selectedVehicles,
             positionAssignments: {},
+            notesText: "",
+            notesImages: [],
             status: 'Laufend',
             createdBy: currentUser.user
         });
@@ -1213,7 +1353,7 @@ function subscribeUserData(username) {
         }
 
         container.innerHTML = '';
-        cloudData.einsatzmittel.forEach(em => {
+        cloudData.einsatzmittel.forEach((em, index) => {
             let canEdit = currentUser && (currentUser.isAdmin || currentUser.canEdit);
             
             let positionsHtml = '';
@@ -1223,8 +1363,12 @@ function subscribeUserData(username) {
                     positionsHtml += `<div class="em-position-box">${pos}</div>`;
                 });
                 positionsHtml += `</div>`;
+            } else {
+                positionsHtml = `<div style="color: var(--text-muted); font-size: 0.8rem; font-style: italic; margin-top: 4px;">Keine Positionen definiert</div>`;
             }
 
+            let upBtn = (index > 0 && canEdit) ? `<button class="btn-action" onclick="moveEm('${em.id}', -1)">▲</button>` : '';
+            let downBtn = (index < cloudData.einsatzmittel.length - 1 && canEdit) ? `<button class="btn-action" onclick="moveEm('${em.id}', 1)">▼</button>` : '';
             let posBtn = canEdit ? `<button class="btn-action" style="background: var(--accent-blue);" onclick="togglePositionModal(true, '${em.id}')">Position hinzufügen</button>` : '';
             let delPosBtn = canEdit ? `<button class="btn-action" style="background: #555;" onclick="toggleDeletePositionModal(true, '${em.id}')">Position löschen</button>` : '';
             let deleteBtn = canEdit ? `<button class="btn-action btn-delete" onclick="deleteEm('${em.id}')">Löschen</button>` : '';
@@ -1236,6 +1380,8 @@ function subscribeUserData(username) {
                         ${positionsHtml}
                     </div>
                     <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
+                        ${upBtn}
+                        ${downBtn}
                         ${posBtn}
                         ${delPosBtn}
                         ${deleteBtn}
@@ -1556,17 +1702,25 @@ function subscribeUserData(username) {
             if (em && em.positions && em.positions.length > 0) {
                 em.positions.forEach(pos => {
                     let mapKey = `${vehName}:::${pos}`;
-                    let assignedHelper = assignments[mapKey];
-                    let posText = assignedHelper ? `${pos}: (${assignedHelper})` : `${pos}`;
+                    let assignedHelpers = assignments[mapKey] || [];
+                    let helpersText = assignedHelpers.length > 0 ? `: (${assignedHelpers.join(", ")})` : "";
 
                     positionsHtml += `
                         <div style="background: #1e1e1e; border: 1px solid #444; padding: 6px 10px; border-radius: 4px; font-size: 0.85rem; color: var(--accent-orange); font-weight: bold; margin-top: 4px;">
-                            ${posText}
+                            ${pos}${helpersText}
                         </div>
                     `;
                 });
             } else {
-                positionsHtml = `<div style="color: var(--text-muted); font-size: 0.8rem; font-style: italic; margin-top: 4px;">Keine Positionen definiert.</div>`;
+                let mapKey = `${vehName}:::_FahrzeugBesatzung`;
+                let assignedHelpers = assignments[mapKey] || [];
+                let helpersText = assignedHelpers.length > 0 ? `: (${assignedHelpers.join(", ")})` : "";
+
+                positionsHtml += `
+                    <div style="background: #1e1e1e; border: 1px solid #444; padding: 6px 10px; border-radius: 4px; font-size: 0.85rem; color: var(--accent-orange); font-weight: bold; margin-top: 4px;">
+                        Besatzung${helpersText}
+                    </div>
+                `;
             }
 
             container.innerHTML += `
