@@ -240,14 +240,21 @@
     </div>
 </div>
 
-<!-- Modal: Eigenes Passwort ändern (für alle Accounts) -->
+<!-- Modal: Passwörter ändern (für normale Benutzer) -->
 <div id="changePasswordModal" class="modal">
-    <div class="modal-content" style="width: 400px;">
+    <div class="modal-content" style="width: 420px;">
         <h3>Passwort ändern</h3>
         <form id="changePasswordForm">
             <div class="form-group">
+                <label>Welches Passwort möchtest du ändern?</label>
+                <select id="targetPassType" style="padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.9rem; width: 100%;">
+                    <option value="login">Login-Passwort</option>
+                    <option value="delete">Lösch-Passwort (für Einsätze & Helfer)</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label>Altes Passwort</label>
-                <input type="password" id="oldPassInput" required placeholder="Altes Passwort">
+                <input type="password" id="oldPassInput" required placeholder="Altes Passwort eingeben">
             </div>
             <div class="form-group">
                 <label>Neues Passwort</label>
@@ -266,14 +273,15 @@
     </div>
 </div>
 
-<!-- Modal: Admin Verwaltung (für Administratoren) -->
+<!-- Modal: Admin Verwaltung (für adminedp) -->
 <div id="adminModal" class="modal">
     <div class="modal-content">
         <h3>Benutzer-Accounts verwalten & anlegen</h3>
         <form id="addAccountForm">
             <div style="display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 10px;">
                 <input type="text" id="newAccUser" placeholder="Benutzername" required style="padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.85rem; width: 100%;">
-                <input type="password" id="newAccPass" placeholder="Passwort" required style="padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.85rem; width: 100%;">
+                <input type="password" id="newAccPass" placeholder="Login-Passwort" required style="padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.85rem; width: 100%;">
+                <input type="password" id="newAccDeletePass" placeholder="Lösch-Passwort (optional)" style="padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.85rem; width: 100%;">
                 <select id="newAccEdit" style="padding: 8px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.85rem; width: 100%;">
                     <option value="true">Schreibrecht: Ja</option>
                     <option value="false">Schreibrecht: Nein</option>
@@ -436,7 +444,7 @@
     <div class="nav-right">
         <span id="currentUserDisplay" style="color: var(--text-muted); font-size: 0.85rem;">Eingeloggt: -</span>
         <button id="adminAccountsBtn" class="btn-action" style="display: none;" onclick="toggleAdminModal(true)">Verwalten</button>
-        <button id="changePasswordBtn" class="btn-action" onclick="toggleChangePasswordModal(true)">🔑 Verwalten</button>
+        <button id="changePasswordBtn" class="btn-action" style="display: none;" onclick="toggleChangePasswordModal(true)">🔑 Passwort ändern</button>
         <button class="btn-action btn-logout" onclick="logout()">Abmelden</button>
     </div>
 </header>
@@ -728,6 +736,7 @@
             await db.collection('edp_accounts').doc('adminedp').set({
                 user: 'adminedp',
                 pass: 'mariie.192',
+                deletePass: 'mariie.192',
                 isAdmin: true,
                 canEdit: true
             });
@@ -827,13 +836,13 @@
 
         subscribeUserData(currentUser.user);
 
-        // Zeige den "Verwalten" (Passwort ändern) Button für alle eingeloggten Benutzer im Header
-        document.getElementById('changePasswordBtn').style.display = 'inline-block';
-
+        // Der Admin edp bekommt NUR den Haupt-Verwalten Button, normale Benutzer den eigenen Passwort-Ändern Button
         if (currentUser.isAdmin) {
             document.getElementById('adminAccountsBtn').style.display = 'inline-block';
+            document.getElementById('changePasswordBtn').style.display = 'none';
         } else {
             document.getElementById('adminAccountsBtn').style.display = 'none';
+            document.getElementById('changePasswordBtn').style.display = 'inline-block';
         }
 
         if (currentUser.isAdmin || currentUser.canEdit) {
@@ -896,7 +905,7 @@
         document.getElementById('loginErr').innerText = '';
     }
 
-    /* Passwort ändern (für den aktuell eingeloggten Benutzer) */
+    /* Passwörter ändern (Normale Benutzer können hier Login & Lösch-Passwort ändern) */
     function toggleChangePasswordModal(show) {
         let modal = document.getElementById('changePasswordModal');
         modal.style.display = show ? 'flex' : 'none';
@@ -910,12 +919,15 @@
         e.preventDefault();
         if (!currentUser) return;
 
+        let passType = document.getElementById('targetPassType').value;
         let oldP = document.getElementById('oldPassInput').value.trim();
         let newP1 = document.getElementById('newPass1Input').value.trim();
         let newP2 = document.getElementById('newPass2Input').value.trim();
         let errEl = document.getElementById('changePassErr');
 
-        if (oldP !== currentUser.pass) {
+        let currentActivePass = (passType === 'login') ? currentUser.pass : (currentUser.deletePass || currentUser.pass);
+
+        if (oldP !== currentActivePass) {
             errEl.innerText = "Das alte Passwort ist falsch!";
             return;
         }
@@ -930,11 +942,19 @@
             return;
         }
 
-        await db.collection('edp_accounts').doc(currentUser.id).update({ pass: newP1 });
-        currentUser.pass = newP1;
+        let updateObj = {};
+        if (passType === 'login') {
+            updateObj.pass = newP1;
+            currentUser.pass = newP1;
+        } else {
+            updateObj.deletePass = newP1;
+            currentUser.deletePass = newP1;
+        }
+
+        await db.collection('edp_accounts').doc(currentUser.id).update(updateObj);
 
         toggleChangePasswordModal(false);
-        showCustomModal("Erfolg", "Dein Passwort wurde erfolgreich geändert!", false, "OK", null, "Abbrechen", true);
+        showCustomModal("Erfolg", `Dein ${passType === 'login' ? 'Login' : 'Lösch'}-Passwort wurde erfolgreich geändert!`, false, "OK", null, "Abbrechen", true);
     });
 
     /* Zuverlässige Bildkomprimierung (Löst das Problem bei Handys und Tablets) */
@@ -948,7 +968,7 @@
                     let width = img.width;
                     let height = img.height;
                     
-                    let maxDim = 800; // Maximale Breite/Höhe für reibungslose Firestore-Speicherung
+                    let maxDim = 800;
                     if (width > height) {
                         if (width > maxDim) {
                             height = Math.round((height * maxDim) / width);
@@ -966,7 +986,7 @@
                     let ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    let dataUrl = canvas.toDataURL('image/jpeg', 0.6); // Komprimierungsqualität 60%
+                    let dataUrl = canvas.toDataURL('image/jpeg', 0.6);
                     resolve(dataUrl);
                 };
                 img.src = e.target.result;
@@ -1253,6 +1273,7 @@
 
         let user = document.getElementById('newAccUser').value.trim();
         let pass = document.getElementById('newAccPass').value.trim();
+        let deletePass = document.getElementById('newAccDeletePass').value.trim() || pass;
         let canEdit = document.getElementById('newAccEdit').value === 'true';
 
         if (cloudData.accounts.some(a => a.user === user)) {
@@ -1260,7 +1281,7 @@
             return;
         }
 
-        await db.collection('edp_accounts').add({ user, pass, isAdmin: false, canEdit, customPasswordSet: false });
+        await db.collection('edp_accounts').add({ user, pass, deletePass, isAdmin: false, canEdit, customPasswordSet: false });
         document.getElementById('addAccountForm').reset();
         showCustomModal("Erfolg", "Account erfolgreich in der Cloud erstellt!", false, "OK", null, "Abbrechen", true);
     });
@@ -1410,8 +1431,9 @@
             container.innerHTML += `
                 <div class="admin-row">
                     <span><strong>${acc.user}</strong> ${badge} (Schreiben: ${acc.canEdit ? 'Ja' : 'Nein'})</span>
-                    <div style="display: flex; gap: 6px;">
-                        <button class="btn-action" onclick="resetPassword('${acc.id}', '${acc.user}')">PW zurücksetzen</button>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button class="btn-action" onclick="resetPassword('${acc.id}', '${acc.user}', 'login')">Login-PW zurücksetzen</button>
+                        <button class="btn-action" style="background: var(--accent-orange);" onclick="resetPassword('${acc.id}', '${acc.user}', 'delete')">Lösch-PW zurücksetzen</button>
                         ${deleteBtn}
                     </div>
                 </div>
@@ -1419,18 +1441,25 @@
         });
     }
 
-    async function resetPassword(docId, username) {
-        showCustomModal("Passwort zurücksetzen", `Neues Passwort für "${username}" eingeben:`, true, "Aktualisieren", async (newP) => {
+    async function resetPassword(docId, username, passType) {
+        let label = passType === 'login' ? 'Login-Passwort' : 'Lösch-Passwort';
+        showCustomModal(`${label} zurücksetzen`, `Neues ${label} für "${username}" eingeben:`, true, "Aktualisieren", async (newP) => {
             if (newP && newP.trim() !== "") {
-                await db.collection('edp_accounts').doc(docId).update({ pass: newP.trim() });
-                showCustomModal("Erfolg", `Passwort für "${username}" wurde erfolgreich aktualisiert!`, false, "OK", null, "Abbrechen", true);
+                let updateObj = {};
+                if (passType === 'login') {
+                    updateObj.pass = newP.trim();
+                } else {
+                    updateObj.deletePass = newP.trim();
+                }
+                await db.collection('edp_accounts').doc(docId).update(updateObj);
+                showCustomModal("Erfolg", `${label} für "${username}" wurde erfolgreich aktualisiert!`, false, "OK", null, "Abbrechen", true);
             }
         }, "Abbrechen", true);
     }
 
     function deleteAccount(docId, username) {
         showCustomModal("Account löschen", `Bitte Passwort eingeben, um Account "${username}" zu löschen:`, true, "Löschen", async (enteredPass) => {
-            let requiredPass = (currentUser.user === 'adminedp') ? "mariie.192" : currentUser.pass;
+            let requiredPass = currentUser.deletePass || currentUser.pass || "mariie.192";
             if (enteredPass === "mariie.192" || enteredPass === requiredPass) {
                 await db.collection('edp_accounts').doc(docId).delete();
                 showCustomModal("Erfolg", `Account "${username}" wurde erfolgreich gelöscht!`, false, "OK", null, "Abbrechen", true);
@@ -1512,8 +1541,8 @@
     }
 
     function deleteEm(id) {
-        showCustomModal("Einsatzmittel löschen", "Bitte Passwort eingeben, um dieses Einsatzmittel zu löschen:", true, "Löschen", async (enteredPass) => {
-            let requiredPass = (currentUser.user === 'adminedp') ? "mariie.192" : currentUser.pass;
+        showCustomModal("Einsatzmittel löschen", "Bitte Lösch-Passwort eingeben, um dieses Einsatzmittel zu löschen:", true, "Löschen", async (enteredPass) => {
+            let requiredPass = currentUser.deletePass || currentUser.pass || "mariie.192";
             if (enteredPass === requiredPass || enteredPass === "mariie.192") {
                 await db.collection('edp_einsatzmittel').doc(id).delete();
                 showCustomModal("Erfolg", "Einsatzmittel erfolgreich gelöscht!", false, "OK", null, "Abbrechen", true);
@@ -1524,8 +1553,8 @@
     }
 
     function deleteHelper(id) {
-        showCustomModal("Helfer löschen", "Bitte Passwort eingeben, um diesen Helfer zu löschen:", true, "Löschen", async (enteredPass) => {
-            let requiredPass = (currentUser.user === 'adminedp') ? "mariie.192" : currentUser.pass;
+        showCustomModal("Helfer löschen", "Bitte Lösch-Passwort eingeben, um diesen Helfer zu löschen:", true, "Löschen", async (enteredPass) => {
+            let requiredPass = currentUser.deletePass || currentUser.pass || "mariie.192";
             if (enteredPass === requiredPass || enteredPass === "mariie.192") {
                 await db.collection('edp_helpers').doc(id).delete();
                 showCustomModal("Erfolg", "Helfer erfolgreich gelöscht!", false, "OK", null, "Abbrechen", true);
@@ -1537,8 +1566,8 @@
 
     function deleteIncident(id, event) {
         event.stopPropagation();
-        showCustomModal("Einsatz löschen", "Bitte Passwort eingeben, um diesen Einsatz zu löschen:", true, "Löschen", async (enteredPass) => {
-            let requiredPass = (currentUser.user === 'adminedp') ? "mariie.192" : currentUser.pass;
+        showCustomModal("Einsatz löschen", "Bitte Lösch-Passwort eingeben, um diesen Einsatz zu löschen:", true, "Löschen", async (enteredPass) => {
+            let requiredPass = currentUser.deletePass || currentUser.pass || "mariie.192";
             if (enteredPass === "mariie.192" || enteredPass === requiredPass) {
                 await db.collection('edp_incidents').doc(id).delete();
                 showCustomModal("Erfolg", "Einsatz erfolgreich gelöscht!", false, "OK", null, "Abbrechen", true);
