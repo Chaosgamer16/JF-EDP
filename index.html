@@ -40,27 +40,11 @@
         .form-group label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; }
         .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; background: #222; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 1rem; }
         
-        /* Angemeldet bleiben Toggle Button */
         .toggle-btn {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #444;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            text-align: center;
-            transition: background 0.2s, border-color 0.2s;
+            width: 100%; padding: 10px; border: 1px solid #444; border-radius: 4px; font-weight: bold; cursor: pointer; text-align: center; transition: background 0.2s, border-color 0.2s;
         }
-        .toggle-btn.no {
-            background: #333;
-            color: #fff;
-            border-color: #555;
-        }
-        .toggle-btn.yes {
-            background: var(--accent-green);
-            color: #fff;
-            border-color: #4caf50;
-        }
+        .toggle-btn.no { background: #333; color: #fff; border-color: #555; }
+        .toggle-btn.yes { background: var(--accent-green); color: #fff; border-color: #4caf50; }
 
         .login-btn { background: var(--accent-red); color: white; border: none; padding: 10px; width: 100%; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px; font-size: 1rem; }
 
@@ -100,56 +84,40 @@
         .accordion-counter { background: #111; border: 1px solid #444; padding: 1px 6px; border-radius: 3px; font-size: 0.75rem; }
         .empty-notice { padding: 12px 14px; color: var(--text-muted); font-size: 0.85rem; font-style: italic; }
 
-        /* Modals & Responsiveness für Touch-Geräte */
+        /* Modals */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; padding: 15px; overflow-y: auto; }
         .modal-content { background: var(--panel-bg); border: 1px solid var(--border-color); padding: 25px; border-radius: 8px; width: 550px; max-width: 100%; max-height: 90vh; overflow-y: auto; overflow-x: hidden; }
         .modal-content h3 { color: var(--accent-orange); margin-bottom: 15px; font-size: 1rem; border-bottom: 1px solid #333; padding-bottom: 8px; }
         .admin-row { background: #1a1a1a; border: 1px solid #333; padding: 8px 12px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.85rem; flex-wrap: wrap; gap: 8px; }
         .badge-admin { background: var(--accent-red); padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; color: #fff; font-weight: bold; }
 
-        /* Style für auswählbare Positionen mit grünem Hintergrund */
         .pos-select-label {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: #222;
-            border: 1px solid #444;
-            padding: 10px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            user-select: none;
-            transition: background 0.2s ease, border-color 0.2s ease;
+            display: flex; align-items: center; gap: 12px; background: #222; border: 1px solid #444; padding: 10px 14px; border-radius: 6px; cursor: pointer; user-select: none; transition: background 0.2s ease, border-color 0.2s ease;
         }
-        .pos-select-label:has(input:checked) {
-            background: #2e7d32 !important;
-            border-color: #4caf50 !important;
-            color: #ffffff !important;
-            font-weight: bold;
-        }
-        .pos-select-label input[type="radio"], .pos-select-label input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            accent-color: #4caf50;
-        }
+        .pos-select-label:has(input:checked) { background: #2e7d32 !important; border-color: #4caf50 !important; color: #ffffff !important; font-weight: bold; }
+        .pos-select-label input[type="radio"], .pos-select-label input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #4caf50; }
 
-        /* Galerie-Style für Notiz-Bilder */
-        .notes-gallery { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-        .notes-img-item { position: relative; width: 100px; height: 100px; border: 1px solid #555; border-radius: 4px; overflow: hidden; background: #111; }
-        .notes-img-item img { width: 100%; height: 100%; object-fit: cover; }
-        .notes-img-del { position: absolute; top: 2px; right: 2px; background: rgba(211,47,47,0.85); color: #fff; border: none; border-radius: 3px; cursor: pointer; padding: 2px 6px; font-size: 0.7rem; font-weight: bold; }
+        /* Chat / Notizbereich Styles */
+        .chat-box { display: flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto; background: #181818; padding: 12px; border-radius: 6px; border: 1px solid #333; margin-bottom: 12px; }
+        .chat-msg { background: #2a2a2a; border: 1px solid #3d3d3d; border-radius: 6px; padding: 8px 12px; font-size: 0.85rem; }
+        .chat-msg-header { display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.72rem; margin-bottom: 4px; border-bottom: 1px solid #3d3d3d; padding-bottom: 3px; }
+        .chat-msg-body { color: #fff; margin-top: 4px; white-space: pre-wrap; }
+        .chat-msg-img { max-width: 100%; max-height: 180px; border-radius: 4px; margin-top: 6px; cursor: pointer; border: 1px solid #444; transition: transform 0.2s; }
+        .chat-msg-img:hover { transform: scale(1.02); }
 
-        /* Andere Ansichten / Apps */
+        /* Image Lightbox Modal */
+        #lightboxModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 20000; justify-content: center; align-items: center; padding: 20px; }
+        #lightboxModal img { max-width: 90vw; max-height: 85vh; border-radius: 6px; border: 2px solid #555; }
+
+        /* Ansichten */
         #appContainer, #helperView, #detailView, #archiveView, #incidentHelperView, #emView, #monitorView { display: none; padding: 20px 30px; flex: 1; }
         .sub-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .btn-primary { background-color: var(--accent-red); color: white; border: none; padding: 8px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; }
         .helper-card { background: var(--panel-bg); border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         
-        /* Positions-Boxen unter dem Funkrufnamen */
         .em-positions-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
         .em-position-box { background: #1e1e1e; border: 1px solid #444; border-radius: 4px; padding: 4px 8px; font-size: 0.8rem; color: var(--accent-orange); font-weight: bold; }
 
-        /* Einsatz Detail Layout */
         .detail-layout { display: flex; gap: 20px; flex-wrap: wrap; }
         .detail-left { flex: 1; min-width: 300px; display: flex; flex-direction: column; gap: 15px; }
         .detail-right { flex: 1.2; min-width: 300px; height: 450px; background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
@@ -163,7 +131,6 @@
         .custom-btn { background: #333; border: 1px solid #555; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 6px; text-decoration: none; }
         .custom-btn.btn-red-text { color: #e57373; border-color: #552222; }
 
-        /* Monitor Ansicht Layout */
         .monitor-layout { display: flex; flex-wrap: wrap; min-height: calc(100vh - 80px); background: #262626; color: #fff; position: relative; }
         .monitor-left { flex: 2; min-width: 300px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; }
         .monitor-right { flex: 1; min-width: 300px; background: #333; position: relative; border-left: 1px solid #444; min-height: 300px; }
@@ -207,7 +174,7 @@
     </div>
 </div>
 
-<!-- Universelles App-Modal für Meldungen & Bestätigungen -->
+<!-- Universelles Modal -->
 <div id="customModal" class="modal">
     <div class="modal-content" style="width: 400px;">
         <h3 id="customModalTitle">Hinweis</h3>
@@ -225,33 +192,51 @@
     </div>
 </div>
 
-<!-- Modal: Einsatz-Notizen & Fotos -->
+<!-- Lightbox Modal für vergrößerte Bilder -->
+<div id="lightboxModal" onclick="closeLightbox()">
+    <img id="lightboxImg" src="" alt="Vorschau Groß">
+</div>
+
+<!-- Modal: Notiz-Chat (Aktiv & Schreibbar) -->
 <div id="notesModal" class="modal">
-    <div class="modal-content">
-        <h3>Einsatznotizen & Fotoerfassung</h3>
+    <div class="modal-content" style="width: 600px;">
+        <h3>Einsatz-Chat & Notizen</h3>
+        
+        <div id="chatBoxContainer" class="chat-box">
+            <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Keine Notizen oder Fotos vorhanden.</div>
+        </div>
+
         <form id="notesForm">
             <div class="form-group">
-                <label>Info / Notiztext</label>
-                <textarea id="noteTextInput" rows="4" placeholder="Hier zusätzliche Einsatzinfos eintragen..."></textarea>
+                <label>Neue Nachricht / Notiz</label>
+                <textarea id="noteTextInput" rows="2" placeholder="Nachricht eingeben..."></textarea>
             </div>
 
             <div class="form-group">
-                <label>Foto aufnehmen (Kamera) oder hochladen</label>
+                <label>Foto hinzufügen (Kamera / Galerie)</label>
                 <input type="file" id="noteImageInput" accept="image/*" capture="environment" style="background: #222; border: 1px solid #444; padding: 6px; width: 100%; border-radius: 4px; color: #fff;">
             </div>
 
-            <div class="form-group">
-                <label>Angehängte Fotos:</label>
-                <div id="notesGalleryContainer" class="notes-gallery">
-                    <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Keine Fotos vorhanden.</div>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button type="submit" class="btn-primary" style="flex: 1;">Notiz speichern</button>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button type="submit" class="btn-primary" style="flex: 1;">Absenden</button>
                 <button type="button" class="btn-action" style="flex: 1; background: #424242;" onclick="toggleNotesModal(false)">Schließen</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Modal: Archiv Notizen (Nur Lesen) -->
+<div id="archiveNotesModal" class="modal">
+    <div class="modal-content" style="width: 600px;">
+        <h3 id="archiveNotesTitle">Einsatz-Notizen (Archiv)</h3>
+        
+        <div id="archiveChatBoxContainer" class="chat-box" style="max-height: 450px;">
+            <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Keine Notizen oder Fotos vorhanden.</div>
+        </div>
+
+        <div style="display: flex; margin-top: 15px;">
+            <button type="button" class="btn-action" style="flex: 1; background: #424242;" onclick="toggleArchiveNotesModal(false)">Schließen</button>
+        </div>
     </div>
 </div>
 
@@ -363,7 +348,7 @@
         <form id="assignHelperForm">
             <input type="hidden" id="assignHelperId">
             <div class="form-group">
-                <label>Wähle eine Position oder das Fahrzeug (falls keine Position) aus:</label>
+                <label>Wähle eine Position oder das Fahrzeug aus:</label>
                 <div id="assignPositionRadioContainer" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px; max-height: 250px; overflow-y: auto;"></div>
             </div>
             <div style="display: flex; gap: 10px; margin-top: 20px;">
@@ -482,7 +467,7 @@
     </div>
 </div>
 
-<!-- App Ansicht (Einsätze Liste) -->
+<!-- App Ansicht -->
 <div id="appContainer">
     <div class="sub-header">
         <div class="page-title" style="margin:0;">Einsatzverwaltung & Details</div>
@@ -750,6 +735,7 @@
                 renderIncidentHelpersList();
                 updateDetailAssignedEm();
                 renderIncidentVehiclePositions();
+                renderChatMessages();
             }
         });
 
@@ -774,8 +760,16 @@
                     return owner === username;
                 });
             
-            list.sort((a, b) => (a.orderIdx || 0) - (b.orderIdx || 0));
-            cloudData.einsatzmittel = list;
+            let uniqueEmMap = new Map();
+            list.forEach(item => {
+                if (!uniqueEmMap.has(item.funkrufname)) {
+                    uniqueEmMap.set(item.funkrufname, item);
+                }
+            });
+            let uniqueList = Array.from(uniqueEmMap.values());
+
+            uniqueList.sort((a, b) => (a.orderIdx || 0) - (b.orderIdx || 0));
+            cloudData.einsatzmittel = uniqueList;
 
             renderEmList();
             if (document.getElementById('incidentModal').style.display === 'flex') {
@@ -882,49 +876,86 @@
         document.getElementById('loginErr').innerText = '';
     }
 
-    /* Notiz & Foto Funktionen */
+    /* Notiz & Chat-Funktionen */
     function toggleNotesModal(show) {
         let modal = document.getElementById('notesModal');
         modal.style.display = show ? 'flex' : 'none';
         if (show && currentDetailIncidentId) {
-            let inc = cloudData.incidents.find(i => i.id === currentDetailIncidentId);
-            if (inc) {
-                document.getElementById('noteTextInput').value = inc.notesText || '';
-                renderNotesGallery(inc.notesImages || []);
-            }
+            renderChatMessages();
         } else {
             document.getElementById('notesForm').reset();
         }
     }
 
-    function renderNotesGallery(images) {
-        let container = document.getElementById('notesGalleryContainer');
-        if (!images || images.length === 0) {
-            container.innerHTML = `<div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Keine Fotos vorhanden.</div>`;
+    function renderChatMessages() {
+        let container = document.getElementById('chatBoxContainer');
+        let inc = cloudData.incidents.find(i => i.id === currentDetailIncidentId);
+        if (!inc || !inc.chatMessages || inc.chatMessages.length === 0) {
+            container.innerHTML = `<div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Keine Notizen oder Fotos vorhanden.</div>`;
             return;
         }
 
         container.innerHTML = '';
-        images.forEach((imgBase64, index) => {
+        inc.chatMessages.forEach(msg => {
+            let imgHtml = msg.img ? `<img src="${msg.img}" class="chat-msg-img" onclick="openLightbox('${msg.img}')" alt="Foto">` : '';
+            let textHtml = msg.text ? `<div class="chat-msg-body">${msg.text}</div>` : '';
+            
             container.innerHTML += `
-                <div class="notes-img-item">
-                    <img src="${imgBase64}" alt="Foto ${index + 1}">
-                    <button type="button" class="notes-img-del" onclick="deleteNoteImage(${index})">✕</button>
+                <div class="chat-msg">
+                    <div class="chat-msg-header">
+                        <span><strong>${msg.sender || 'System'}</strong></span>
+                        <span>${msg.time || ''}</span>
+                    </div>
+                    ${textHtml}${imgHtml}
                 </div>
             `;
         });
+
+        container.scrollTop = container.scrollHeight;
     }
 
-    async function deleteNoteImage(index) {
-        if (!currentDetailIncidentId) return;
-        let inc = cloudData.incidents.find(i => i.id === currentDetailIncidentId);
-        if (!inc || !inc.notesImages) return;
+    /* Archiv Notizen modal (Nur Lesen) */
+    function openArchiveNotesModal(incidentId) {
+        let inc = cloudData.incidents.find(i => i.id === incidentId);
+        if (!inc) return;
 
-        let imgs = inc.notesImages;
-        imgs.splice(index, 1);
+        document.getElementById('archiveNotesTitle').innerText = `Notizen: #${String(inc.nummer).padStart(10, '0')} (${inc.stichwort})`;
+        let container = document.getElementById('archiveChatBoxContainer');
+        
+        if (!inc.chatMessages || inc.chatMessages.length === 0) {
+            container.innerHTML = `<div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Keine Notizen oder Fotos vorhanden.</div>`;
+        } else {
+            container.innerHTML = '';
+            inc.chatMessages.forEach(msg => {
+                let imgHtml = msg.img ? `<img src="${msg.img}" class="chat-msg-img" onclick="openLightbox('${msg.img}')" alt="Foto">` : '';
+                let textHtml = msg.text ? `<div class="chat-msg-body">${msg.text}</div>` : '';
+                
+                container.innerHTML += `
+                    <div class="chat-msg">
+                        <div class="chat-msg-header">
+                            <span><strong>${msg.sender || 'System'}</strong></span>
+                            <span>${msg.time || ''}</span>
+                        </div>
+                        ${textHtml}${imgHtml}
+                    </div>
+                `;
+            });
+        }
 
-        await db.collection('edp_incidents').doc(currentDetailIncidentId).update({ notesImages: imgs });
-        renderNotesGallery(imgs);
+        document.getElementById('archiveNotesModal').style.display = 'flex';
+    }
+
+    function toggleArchiveNotesModal(show) {
+        document.getElementById('archiveNotesModal').style.display = show ? 'flex' : 'none';
+    }
+
+    function openLightbox(imgSrc) {
+        document.getElementById('lightboxImg').src = imgSrc;
+        document.getElementById('lightboxModal').style.display = 'flex';
+    }
+
+    function closeLightbox() {
+        document.getElementById('lightboxModal').style.display = 'none';
     }
 
     document.getElementById('notesForm').addEventListener('submit', async (e) => {
@@ -934,31 +965,40 @@
         let noteText = document.getElementById('noteTextInput').value.trim();
         let fileInput = document.getElementById('noteImageInput');
         let inc = cloudData.incidents.find(i => i.id === currentDetailIncidentId);
-        let currentImgs = (inc && inc.notesImages) ? [...inc.notesImages] : [];
+        let currentChat = (inc && inc.chatMessages) ? [...inc.chatMessages] : [];
+
+        let now = new Date();
+        let timeStr = now.toLocaleDateString('de-DE') + ' ' + now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+
+        if (!noteText && (!fileInput.files || !fileInput.files[0])) {
+            return;
+        }
+
+        let saveMsg = async (base64Img = null) => {
+            currentChat.push({
+                sender: currentUser ? currentUser.user : 'Unbekannt',
+                time: timeStr,
+                text: noteText,
+                img: base64Img
+            });
+
+            await db.collection('edp_incidents').doc(currentDetailIncidentId).update({
+                chatMessages: currentChat
+            });
+
+            document.getElementById('noteTextInput').value = '';
+            fileInput.value = '';
+            renderChatMessages();
+        };
 
         if (fileInput.files && fileInput.files[0]) {
             let reader = new FileReader();
-            reader.onload = async function(evt) {
-                let base64Image = evt.target.result;
-                currentImgs.push(base64Image);
-
-                await db.collection('edp_incidents').doc(currentDetailIncidentId).update({
-                    notesText: noteText,
-                    notesImages: currentImgs
-                });
-
-                fileInput.value = '';
-                toggleNotesModal(false);
-                showCustomModal("Erfolg", "Notiz & Foto erfolgreich gespeichert!", false, "OK", null, "Abbrechen", true);
+            reader.onload = function(evt) {
+                saveMsg(evt.target.result);
             };
             reader.readAsDataURL(fileInput.files[0]);
         } else {
-            await db.collection('edp_incidents').doc(currentDetailIncidentId).update({
-                notesText: noteText,
-                notesImages: currentImgs
-            });
-            toggleNotesModal(false);
-            showCustomModal("Erfolg", "Notiz erfolgreich gespeichert!", false, "OK", null, "Abbrechen", true);
+            saveMsg(null);
         }
     });
 
@@ -1021,40 +1061,31 @@
             let container = document.getElementById('assignPositionRadioContainer');
             container.innerHTML = '';
 
-            let inc = cloudData.incidents.find(i => i.id === currentDetailIncidentId);
-            if (!inc || !inc.assignedVehicles || inc.assignedVehicles.length === 0) {
-                container.innerHTML = `<div style="color: var(--text-muted); font-size: 0.85rem;">Keine Fahrzeuge in diesem Einsatz vorhanden.</div>`;
-                return;
-            }
-
             let hasItems = false;
-            inc.assignedVehicles.forEach(vehName => {
-                let em = cloudData.einsatzmittel.find(e => e.funkrufname === vehName);
-                if (em) {
-                    if (em.positions && em.positions.length > 0) {
-                        em.positions.forEach(pos => {
-                            hasItems = true;
-                            container.innerHTML += `
-                                <label class="pos-select-label">
-                                    <input type="radio" name="selectedAssignPosition" value="${vehName}:::${pos}">
-                                    <span><strong>${vehName}</strong> –${pos}</span>
-                                </label>
-                            `;
-                        });
-                    } else {
+            cloudData.einsatzmittel.forEach(em => {
+                if (em.positions && em.positions.length > 0) {
+                    em.positions.forEach(pos => {
                         hasItems = true;
                         container.innerHTML += `
                             <label class="pos-select-label">
-                                <input type="radio" name="selectedAssignPosition" value="${vehName}:::_FahrzeugBesatzung">
-                                <span><strong>${vehName}</strong> (Fahrzeug / Allgemeine Besatzung)</span>
+                                <input type="radio" name="selectedAssignPosition" value="${em.funkrufname}:::${pos}">
+                                <span><strong>${em.funkrufname}</strong> –${pos}</span>
                             </label>
                         `;
-                    }
+                    });
+                } else {
+                    hasItems = true;
+                    container.innerHTML += `
+                        <label class="pos-select-label">
+                            <input type="radio" name="selectedAssignPosition" value="${em.funkrufname}:::_FahrzeugBesatzung">
+                            <span><strong>${em.funkrufname}</strong> (Fahrzeug / Besatzung)</span>
+                        </label>
+                    `;
                 }
             });
 
             if (!hasItems) {
-                container.innerHTML = `<div style="color: var(--text-muted); font-size: 0.85rem;">Keine Fahrzeuge oder Positionen verfügbar.</div>`;
+                container.innerHTML = `<div style="color: var(--text-muted); font-size: 0.85rem;">Keine Einsatzmittel verfügbar.</div>`;
             }
         } else {
             document.getElementById('assignHelperForm').reset();
@@ -1076,7 +1107,6 @@
         if (!helper) return;
 
         let helperFullName = `${helper.nachname},${helper.vorname}`;
-
         let inc = cloudData.incidents.find(i => i.id === currentDetailIncidentId);
         if (!inc) return;
 
@@ -1250,8 +1280,7 @@
             plzOrt,
             assignedVehicles: selectedVehicles,
             positionAssignments: {},
-            notesText: "",
-            notesImages: [],
+            chatMessages: [],
             status: 'Laufend',
             createdBy: currentUser.user
         });
@@ -1497,7 +1526,8 @@
                             <strong>${inc.stichwort}</strong>: ${inc.beschreibung} <br>
                             <span style="color: var(--text-muted); font-size: 0.85rem;">Ort: ${fullAddress}</span>
                         </div>
-                        <div>
+                        <div style="display: flex; gap: 6px; align-items: center;">
+                            <button class="btn-action" style="background: var(--accent-blue);" onclick="openArchiveNotesModal('${inc.id}')">📝 Notizen</button>
                             ${deleteBtn}
                         </div>
                     </div>
@@ -1671,7 +1701,7 @@
         }
 
         container.innerHTML = '';
-        cloudData.helpers.length && cloudData.helpers.forEach(h => {
+        cloudData.helpers.forEach(h => {
             container.innerHTML += `
                 <div style="background: #222; border: 1px solid #444; padding: 8px 12px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                     <div><strong>${h.nachname}</strong>, ${h.vorname} <span style="color: var(--text-muted); font-size: 0.75rem;">(${h.rolle})</span></div>
@@ -1686,20 +1716,19 @@
         let inc = cloudData.incidents.find(i => i.id === currentDetailIncidentId);
         if (!inc) return;
 
-        let assignedVehicles = inc.assignedVehicles || [];
         let assignments = inc.positionAssignments || {};
 
-        if (assignedVehicles.length === 0) {
-            container.innerHTML = `<div class="empty-notice">Keine Fahrzeuge zugewiesen.</div>`;
+        if (cloudData.einsatzmittel.length === 0) {
+            container.innerHTML = `<div class="empty-notice">Keine Einsatzmittel vorhanden.</div>`;
             return;
         }
 
         container.innerHTML = '';
-        assignedVehicles.forEach(vehName => {
-            let em = cloudData.einsatzmittel.find(e => e.funkrufname === vehName);
+        cloudData.einsatzmittel.forEach(em => {
+            let vehName = em.funkrufname;
             let positionsHtml = '';
 
-            if (em && em.positions && em.positions.length > 0) {
+            if (em.positions && em.positions.length > 0) {
                 em.positions.forEach(pos => {
                     let mapKey = `${vehName}:::${pos}`;
                     let assignedHelpers = assignments[mapKey] || [];
