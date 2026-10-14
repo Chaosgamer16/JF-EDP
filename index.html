@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EDP-Light // Startseite - Feuerwehr</title>
+    <title>JF-ELS // Startseite - Feuerwehr</title>
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -181,7 +181,7 @@
 <!-- Login -->
 <div id="loginScreen">
     <div class="login-box">
-        <h2>EDP-Light Login</h2>
+        <h2>JF-ELS Login</h2>
         <form id="loginForm">
             <div class="form-group">
                 <label>Benutzername</label>
@@ -386,7 +386,7 @@
 <header>
     <div class="logo-area">
         <svg width="28" height="28" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#ff6b6b"/><g transform="translate(8, 8)"><rect x="2" y="2" width="36" height="26" rx="4" stroke="#ffffff" stroke-width="3" fill="#121212"/><path d="M15 34H25" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/><path d="M20 28V34" stroke="#ffffff" stroke-width="3"/><path d="M20 10C20 10 14 15 14 18.5C14 20.9853 16.0147 23 18.5 23C20.9853 23 23 20.9853 23 18.5C23 15 20 10 20 10Z" fill="#d32f2f"/><circle cx="20" cy="18" r="2.5" fill="#ffffff"/></g></svg>
-        <h1>EDP-Light // <span>Jugendfeuerwehr</span></h1>
+        <h1>JF-ELS // <span>Jugendfeuerwehr</span></h1>
     </div>
     <div style="flex: 1; display: flex; justify-content: center; min-width: 200px;">
         <div class="search-bar" style="width: 100%; max-width: 280px;">
@@ -626,8 +626,12 @@
         einsatzmittel: []
     };
 
+    let unsubIncidents = null;
+    let unsubHelpers = null;
+    let unsubEm = null;
+
     // Universelles App-Modal für Meldungen & Passwörter (ersetzt alle Browser-Popups)
-    function showCustomModal(title, text, showInput, onConfirmText, onConfirmCallback) {
+    function showCustomModal(title, text, showInput, onConfirmText, onConfirmCallback, cancelText = "Abbrechen", showCancel = true) {
         document.getElementById('customModalTitle').innerText = title;
         document.getElementById('customModalText').innerText = text;
         
@@ -637,14 +641,19 @@
         let confirmBtn = document.getElementById('customModalConfirmBtn');
 
         confirmBtn.innerText = onConfirmText || "OK";
+        cancelBtn.innerText = cancelText;
+
+        if (showCancel) {
+            cancelBtn.style.display = 'block';
+        } else {
+            cancelBtn.style.display = 'none';
+        }
 
         if (showInput) {
             inputGroup.style.display = 'block';
             inputField.value = '';
-            cancelBtn.style.display = 'block';
         } else {
             inputGroup.style.display = 'none';
-            cancelBtn.style.display = 'none';
         }
 
         confirmBtn.onclick = function() {
@@ -700,8 +709,16 @@
                 renderAccountsList();
             }
         });
+    }
 
-        db.collection('edp_incidents').onSnapshot(snap => {
+    initFirebaseSync();
+
+    function subscribeUserData(username) {
+        if (unsubIncidents) unsubIncidents();
+        if (unsubHelpers) unsubHelpers();
+        if (unsubEm) unsubEm();
+
+        unsubIncidents = db.collection('edp_incidents').where('createdBy', '==', username).onSnapshot(snap => {
             cloudData.incidents = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderDashboardIncidents();
             renderArchiveIncidents();
@@ -712,7 +729,7 @@
             }
         });
 
-        db.collection('edp_helpers').onSnapshot(snap => {
+        unsubHelpers = db.collection('edp_helpers').where('createdBy', '==', username).onSnapshot(snap => {
             cloudData.helpers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderHelpersList();
             if (currentDetailIncidentId) {
@@ -720,7 +737,7 @@
             }
         });
 
-        db.collection('edp_einsatzmittel').onSnapshot(snap => {
+        unsubEm = db.collection('edp_einsatzmittel').where('createdBy', '==', username).onSnapshot(snap => {
             cloudData.einsatzmittel = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             renderEmList();
             if (document.getElementById('incidentModal').style.display === 'flex') {
@@ -731,8 +748,6 @@
             }
         });
     }
-
-    initFirebaseSync();
 
     function checkAutoLogin() {
         if (currentUser) return;
@@ -750,6 +765,8 @@
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('dashboardView').style.display = 'block';
         document.getElementById('currentUserDisplay').innerText = "Eingeloggt: " + currentUser.user;
+
+        subscribeUserData(currentUser.user);
 
         if (currentUser.isAdmin) {
             document.getElementById('adminBtn').style.display = 'inline-block';
@@ -784,9 +801,9 @@
                     if (newCustomPass && newCustomPass.trim() !== "") {
                         found.pass = newCustomPass.trim();
                         await db.collection('edp_accounts').doc(found.id).update({ pass: newCustomPass.trim(), customPasswordSet: true });
-                        showCustomModal("Erfolg", "Dein eigenes Passwort wurde erfolgreich gespeichert!", false);
+                        showCustomModal("Erfolg", "Dein eigenes Passwort wurde erfolgreich gespeichert!", false, "OK", null, "Abbrechen", true);
                     }
-                });
+                }, "Abbrechen", true);
             }
 
             if (stayLoggedIn) {
@@ -804,6 +821,10 @@
     function logout() {
         localStorage.removeItem('edp_stay_logged_user');
         currentUser = null;
+        if (unsubIncidents) unsubIncidents();
+        if (unsubHelpers) unsubHelpers();
+        if (unsubEm) unsubEm();
+
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('dashboardView').style.display = 'none';
         document.getElementById('appContainer').style.display = 'none';
@@ -918,7 +939,7 @@
         let selectedRadio = document.querySelector('input[name="selectedAssignPosition"]:checked');
 
         if (!selectedRadio) {
-            showCustomModal("Hinweis", "Bitte wähle eine Position aus.", false);
+            showCustomModal("Hinweis", "Bitte wähle eine Position aus.", false, "OK", null, "Abbrechen", true);
             return;
         }
 
@@ -941,7 +962,7 @@
 
     function toggleIncidentModal(show) {
         if (show && (!currentUser || (!currentUser.isAdmin && !currentUser.canEdit))) {
-            showCustomModal("Hinweis", "Keine Schreibrechte vorhanden!", false);
+            showCustomModal("Hinweis", "Keine Schreibrechte vorhanden!", false, "OK", null, "Abbrechen", true);
             return;
         }
         document.getElementById('incidentModal').style.display = show ? 'flex' : 'none';
@@ -980,13 +1001,13 @@
         let canEdit = document.getElementById('newAccEdit').value === 'true';
 
         if (cloudData.accounts.some(a => a.user === user)) {
-            showCustomModal("Hinweis", "Benutzername existiert bereits!", false);
+            showCustomModal("Hinweis", "Benutzername existiert bereits!", false, "OK", null, "Abbrechen", true);
             return;
         }
 
         await db.collection('edp_accounts').add({ user, pass, isAdmin: false, canEdit, customPasswordSet: false });
         document.getElementById('addAccountForm').reset();
-        showCustomModal("Erfolg", "Account erfolgreich in der Cloud erstellt!", false);
+        showCustomModal("Erfolg", "Account erfolgreich in der Cloud erstellt!", false, "OK", null, "Abbrechen", true);
     });
 
     document.getElementById('addHelperForm').addEventListener('submit', async (e) => {
@@ -997,7 +1018,7 @@
         let vorname = document.getElementById('helperVorname').value.trim();
         let rolle = document.getElementById('helperRolle').value.trim();
 
-        await db.collection('edp_helpers').add({ nachname, vorname, rolle });
+        await db.collection('edp_helpers').add({ nachname, vorname, rolle, createdBy: currentUser.user });
         toggleHelperModal(false);
     });
 
@@ -1007,7 +1028,7 @@
 
         let funkrufname = document.getElementById('emFunkrufname').value.trim();
 
-        await db.collection('edp_einsatzmittel').add({ funkrufname, positions: [] });
+        await db.collection('edp_einsatzmittel').add({ funkrufname, positions: [], createdBy: currentUser.user });
         toggleEmModal(false);
     });
 
@@ -1044,7 +1065,7 @@
             await db.collection('edp_einsatzmittel').doc(emId).update({ positions: remainingPositions });
             toggleDeletePositionModal(false);
         } else {
-            showCustomModal("Hinweis", "Bitte wähle mindestens eine Position zum Löschen aus.", false);
+            showCustomModal("Hinweis", "Bitte wähle mindestens eine Position zum Löschen aus.", false, "OK", null, "Abbrechen", true);
         }
     });
 
@@ -1072,7 +1093,8 @@
             plzOrt,
             assignedVehicles: selectedVehicles,
             positionAssignments: {},
-            status: 'Laufend'
+            status: 'Laufend',
+            createdBy: currentUser.user
         });
 
         toggleIncidentModal(false);
@@ -1080,21 +1102,23 @@
 
     document.getElementById('btnCompleteIncident').addEventListener('click', () => {
         if (!currentUser || (!currentUser.isAdmin && !currentUser.canEdit)) {
-            showCustomModal("Hinweis", "Keine Schreibrechte vorhanden!", false);
+            showCustomModal("Hinweis", "Keine Schreibrechte vorhanden!", false, "OK", null, "Abbrechen", true);
             return;
         }
         if (!currentDetailIncidentId) return;
 
-        showCustomModal("Einsatz beenden", "Möchtest du diesen Einsatz wirklich beenden? Er wird ins Archiv verschoben.", true, "Ja, beenden", async (enteredPass) => {
-            let requiredPass = (currentUser.user === 'adminedp') ? "mariie.192" : currentUser.pass;
-            if (enteredPass === requiredPass || enteredPass === "mariie.192") {
+        showCustomModal(
+            "Einsatz beenden", 
+            "Möchtest du diesen Einsatz wirklich beenden? Er wird ins Archiv verschoben.", 
+            false, 
+            "Ja", 
+            async () => {
                 await db.collection('edp_incidents').doc(currentDetailIncidentId).update({ status: 'Abgeschlossen' });
                 closeDetailView();
-                showCustomModal("Erfolg", "Einsatz erfolgreich beendet und archiviert!", false);
-            } else {
-                showCustomModal("Fehler", "Falsches Passwort! Einsatz wurde nicht beendet.", false);
-            }
-        });
+            }, 
+            "Nein", 
+            true
+        );
     });
 
     function renderAccountsList() {
@@ -1120,9 +1144,9 @@
         showCustomModal("Passwort zurücksetzen", `Neues Passwort für "${username}" eingeben:`, true, "Aktualisieren", async (newP) => {
             if (newP && newP.trim() !== "") {
                 await db.collection('edp_accounts').doc(docId).update({ pass: newP.trim() });
-                showCustomModal("Erfolg", `Passwort für "${username}" wurde erfolgreich aktualisiert!`, false);
+                showCustomModal("Erfolg", `Passwort für "${username}" wurde erfolgreich aktualisiert!`, false, "OK", null, "Abbrechen", true);
             }
-        });
+        }, "Abbrechen", true);
     }
 
     function deleteAccount(docId, username) {
@@ -1130,11 +1154,11 @@
             let requiredPass = (currentUser.user === 'adminedp') ? "mariie.192" : currentUser.pass;
             if (enteredPass === "mariie.192" || enteredPass === requiredPass) {
                 await db.collection('edp_accounts').doc(docId).delete();
-                showCustomModal("Erfolg", `Account "${username}" wurde erfolgreich gelöscht!`, false);
+                showCustomModal("Erfolg", `Account "${username}" wurde erfolgreich gelöscht!`, false, "OK", null, "Abbrechen", true);
             } else {
-                showCustomModal("Fehler", "Falsches Passwort! Account wurde nicht gelöscht.", false);
+                showCustomModal("Fehler", "Falsches Passwort! Account wurde nicht gelöscht.", false, "OK", null, "Abbrechen", true);
             }
-        });
+        }, "Abbrechen", true);
     }
 
     function renderHelpersList() {
@@ -1207,11 +1231,11 @@
             let requiredPass = (currentUser.user === 'adminedp') ? "mariie.192" : currentUser.pass;
             if (enteredPass === requiredPass || enteredPass === "mariie.192") {
                 await db.collection('edp_einsatzmittel').doc(id).delete();
-                showCustomModal("Erfolg", "Einsatzmittel erfolgreich gelöscht!", false);
+                showCustomModal("Erfolg", "Einsatzmittel erfolgreich gelöscht!", false, "OK", null, "Abbrechen", true);
             } else {
-                showCustomModal("Fehler", "Falsches Passwort! Einsatzmittel wurde nicht gelöscht.", false);
+                showCustomModal("Fehler", "Falsches Passwort! Einsatzmittel wurde nicht gelöscht.", false, "OK", null, "Abbrechen", true);
             }
-        });
+        }, "Abbrechen", true);
     }
 
     function deleteHelper(id) {
@@ -1219,24 +1243,24 @@
             let requiredPass = (currentUser.user === 'adminedp') ? "mariie.192" : currentUser.pass;
             if (enteredPass === requiredPass || enteredPass === "mariie.192") {
                 await db.collection('edp_helpers').doc(id).delete();
-                showCustomModal("Erfolg", "Helfer erfolgreich gelöscht!", false);
+                showCustomModal("Erfolg", "Helfer erfolgreich gelöscht!", false, "OK", null, "Abbrechen", true);
             } else {
-                showCustomModal("Fehler", "Falsches Passwort! Helfer wurde nicht gelöscht.", false);
+                showCustomModal("Fehler", "Falsches Passwort! Helfer wurde nicht gelöscht.", false, "OK", null, "Abbrechen", true);
             }
-        });
+        }, "Abbrechen", true);
     }
 
     function deleteIncident(id, event) {
         event.stopPropagation();
         showCustomModal("Einsatz löschen", "Bitte Passwort eingeben, um diesen Einsatz zu löschen:", true, "Löschen", async (enteredPass) => {
             let requiredPass = (currentUser.user === 'adminedp') ? "mariie.192" : currentUser.pass;
-            if (enteredPass === requiredPass || enteredPass === "mariie.192") {
+            if (enteredPass === "mariie.192" || enteredPass === requiredPass) {
                 await db.collection('edp_incidents').doc(id).delete();
-                showCustomModal("Erfolg", "Einsatz erfolgreich gelöscht!", false);
+                showCustomModal("Erfolg", "Einsatz erfolgreich gelöscht!", false, "OK", null, "Abbrechen", true);
             } else {
-                showCustomModal("Fehler", "Falsches Passwort! Einsatz wurde nicht gelöscht.", false);
+                showCustomModal("Fehler", "Falsches Passwort! Einsatz wurde nicht gelöscht.", false, "OK", null, "Abbrechen", true);
             }
-        });
+        }, "Abbrechen", true);
     }
 
     function renderDashboardIncidents() {
@@ -1258,8 +1282,6 @@
 
         activeInc.forEach(inc => {
             let fullAddress = `${inc.strasse} ${inc.hausnummer}, ${inc.plzOrt}`;
-            let canDelete = currentUser && (currentUser.isAdmin || currentUser.canEdit);
-            let deleteBtn = canDelete ? `<button class="btn-action btn-delete" onclick="deleteIncident('${inc.id}', event)">Löschen</button>` : '';
             
             dashContainer.innerHTML += `
                 <div class="incident-card" onclick="openDetailView('${inc.id}')" style="background: #2a2a2a; border: 1px solid #3d3d3d; margin: 10px 14px; padding: 10px 14px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; flex-wrap: wrap; gap: 10px;">
@@ -1269,7 +1291,6 @@
                     </div>
                     <div style="display: flex; align-items: center; gap: 20px;">
                         <div style="color:var(--text-muted);">${fullAddress}</div>
-                        ${deleteBtn}
                     </div>
                 </div>
             `;
@@ -1281,9 +1302,6 @@
                             <span style="background: #1a1a1a; border: 1px solid #555; padding: 3px 8px; border-radius: 3px; font-family: monospace; font-weight: bold; margin-right: 10px;">#${String(inc.nummer).padStart(10, '0')}</span>
                             <strong>${inc.stichwort}</strong>: ${inc.beschreibung} <br>
                             <span style="color: var(--text-muted); font-size: 0.85rem;">Ort: ${fullAddress}</span>
-                        </div>
-                        <div>
-                            ${deleteBtn}
                         </div>
                     </div>
                 </div>
