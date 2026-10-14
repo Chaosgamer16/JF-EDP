@@ -240,7 +240,33 @@
     </div>
 </div>
 
-<!-- Modal: Verwaltung -->
+<!-- Modal: Eigenes Passwort ändern (für alle Accounts) -->
+<div id="changePasswordModal" class="modal">
+    <div class="modal-content" style="width: 400px;">
+        <h3>Passwort ändern</h3>
+        <form id="changePasswordForm">
+            <div class="form-group">
+                <label>Altes Passwort</label>
+                <input type="password" id="oldPassInput" required placeholder="Altes Passwort">
+            </div>
+            <div class="form-group">
+                <label>Neues Passwort</label>
+                <input type="password" id="newPass1Input" required placeholder="Neues Passwort">
+            </div>
+            <div class="form-group">
+                <label>Neues Passwort wiederholen</label>
+                <input type="password" id="newPass2Input" required placeholder="Neues Passwort wiederholen">
+            </div>
+            <p id="changePassErr" style="color: var(--accent-red); font-size: 0.75rem; margin-bottom: 10px;"></p>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button type="submit" class="btn-primary" style="flex: 1;">Speichern</button>
+                <button type="button" class="btn-action" style="flex: 1; background: #424242;" onclick="toggleChangePasswordModal(false)">Abbrechen</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Admin Verwaltung (für Administratoren) -->
 <div id="adminModal" class="modal">
     <div class="modal-content">
         <h3>Benutzer-Accounts verwalten & anlegen</h3>
@@ -409,7 +435,8 @@
     </div>
     <div class="nav-right">
         <span id="currentUserDisplay" style="color: var(--text-muted); font-size: 0.85rem;">Eingeloggt: -</span>
-        <button id="adminBtn" class="btn-action" style="display: none;" onclick="toggleAdminModal(true)">Verwalten</button>
+        <button id="adminAccountsBtn" class="btn-action" style="display: none;" onclick="toggleAdminModal(true)">Verwalten</button>
+        <button id="changePasswordBtn" class="btn-action" style="display: none;" onclick="toggleChangePasswordModal(true)">🔑 Verwalten</button>
         <button class="btn-action btn-logout" onclick="logout()">Abmelden</button>
     </div>
 </header>
@@ -800,10 +827,14 @@
 
         subscribeUserData(currentUser.user);
 
+        // Jeder Account bekommt den "Verwalten" (Passwort ändern) Button
+        document.getElementById('changePasswordBtn').style.display = 'inline-block';
+
+        // Nur Administratoren sehen den Button für die Account-Verwaltung (Benutzer anlegen etc.)
         if (currentUser.isAdmin) {
-            document.getElementById('adminBtn').style.display = 'inline-block';
+            document.getElementById('adminAccountsBtn').style.display = 'inline-block';
         } else {
-            document.getElementById('adminBtn').style.display = 'none';
+            document.getElementById('adminAccountsBtn').style.display = 'none';
         }
 
         if (currentUser.isAdmin || currentUser.canEdit) {
@@ -828,16 +859,6 @@
         let found = cloudData.accounts.find(acc => acc.user === u && acc.pass === p);
 
         if (found) {
-            if (found.user !== 'adminedp' && found.canEdit && (!found.customPasswordSet || found.pass === "mariie.192")) {
-                showCustomModal("Passwort festlegen", `Hallo ${found.user}! Da du Schreibrechte hast, lege bitte dein eigenes Passwort fest:`, true, "Speichern", async (newCustomPass) => {
-                    if (newCustomPass && newCustomPass.trim() !== "") {
-                        found.pass = newCustomPass.trim();
-                        await db.collection('edp_accounts').doc(found.id).update({ pass: newCustomPass.trim(), customPasswordSet: true });
-                        showCustomModal("Erfolg", "Dein eigenes Passwort wurde erfolgreich gespeichert!", false, "OK", null, "Abbrechen", true);
-                    }
-                }, "Abbrechen", true);
-            }
-
             if (stayLoggedIn) {
                 localStorage.setItem('edp_stay_logged_user', found.user);
             } else {
@@ -874,6 +895,85 @@
         btn.innerText = 'Nein';
 
         document.getElementById('loginErr').innerText = '';
+    }
+
+    /* Passwort ändern (für den aktuell eingeloggten Benutzer) */
+    function toggleChangePasswordModal(show) {
+        let modal = document.getElementById('changePasswordModal');
+        modal.style.display = show ? 'flex' : 'none';
+        if (show) {
+            document.getElementById('changePasswordForm').reset();
+            document.getElementById('changePassErr').innerText = '';
+        }
+    }
+
+    document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!currentUser) return;
+
+        let oldP = document.getElementById('oldPassInput').value.trim();
+        let newP1 = document.getElementById('newPass1Input').value.trim();
+        let newP2 = document.getElementById('newPass2Input').value.trim();
+        let errEl = document.getElementById('changePassErr');
+
+        if (oldP !== currentUser.pass) {
+            errEl.innerText = "Das alte Passwort ist falsch!";
+            return;
+        }
+
+        if (newP1 !== newP2) {
+            errEl.innerText = "Die beiden neuen Passwörter stimmen nicht überein!";
+            return;
+        }
+
+        if (newP1.length < 4) {
+            errEl.innerText = "Das neue Passwort muss mindestens 4 Zeichen lang sein!";
+            return;
+        }
+
+        // In Firestore aktualisieren
+        await db.collection('edp_accounts').doc(currentUser.id).update({ pass: newP1 });
+        currentUser.pass = newP1;
+
+        toggleChangePasswordModal(false);
+        showCustomModal("Erfolg", "Dein Passwort wurde erfolgreich geändert!", false, "OK", null, "Abbrechen", true);
+    });
+
+    /* Hilfsfunktion zur Bildkomprimierung für Tablet/Handy */
+    function compressImage(file, maxWidth = 1024, maxHeight = 1024, quality = 0.7) {
+        return new Promise((resolve) => {
+            let reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = function (event) {
+                let img = new Image();
+                img.src = event.target.result;
+                img.onload = function () {
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width = Math.round((width * maxHeight) / height);
+                            height = maxHeight;
+                        }
+                    }
+
+                    let canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    let ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    let compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+                    resolve(compressedDataUrl);
+                };
+            };
+        });
     }
 
     /* Notiz & Chat-Funktionen */
@@ -914,7 +1014,6 @@
         container.scrollTop = container.scrollHeight;
     }
 
-    /* Archiv Notizen modal (Nur Lesen) */
     function openArchiveNotesModal(incidentId) {
         let inc = cloudData.incidents.find(i => i.id === incidentId);
         if (!inc) return;
@@ -992,13 +1091,10 @@
         };
 
         if (fileInput.files && fileInput.files[0]) {
-            let reader = new FileReader();
-            reader.onload = function(evt) {
-                saveMsg(evt.target.result);
-            };
-            reader.readAsDataURL(fileInput.files[0]);
+            let compressedBase64 = await compressImage(fileInput.files[0]);
+            await saveMsg(compressedBase64);
         } else {
-            saveMsg(null);
+            await saveMsg(null);
         }
     });
 
@@ -1193,7 +1289,7 @@
         let funkrufname = document.getElementById('emFunkrufname').value.trim();
         let maxOrder = cloudData.einsatzmittel.length > 0 ? Math.max(...cloudData.einsatzmittel.map(e => e.orderIdx || 0)) + 1 : 1;
 
-        await db.collection('edp_einsatzmittel').add({ 
+        await db.collection('edp_einsatzmittel').doc(emId).add({ 
             funkrufname, 
             positions: [], 
             orderIdx: maxOrder,
