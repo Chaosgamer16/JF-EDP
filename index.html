@@ -436,7 +436,7 @@
     <div class="nav-right">
         <span id="currentUserDisplay" style="color: var(--text-muted); font-size: 0.85rem;">Eingeloggt: -</span>
         <button id="adminAccountsBtn" class="btn-action" style="display: none;" onclick="toggleAdminModal(true)">Verwalten</button>
-        <button id="changePasswordBtn" class="btn-action" style="display: none;" onclick="toggleChangePasswordModal(true)">🔑 Verwalten</button>
+        <button id="changePasswordBtn" class="btn-action" onclick="toggleChangePasswordModal(true)">🔑 Verwalten</button>
         <button class="btn-action btn-logout" onclick="logout()">Abmelden</button>
     </div>
 </header>
@@ -827,10 +827,9 @@
 
         subscribeUserData(currentUser.user);
 
-        // Jeder Account bekommt den "Verwalten" (Passwort ändern) Button
+        // Zeige den "Verwalten" (Passwort ändern) Button für alle eingeloggten Benutzer im Header
         document.getElementById('changePasswordBtn').style.display = 'inline-block';
 
-        // Nur Administratoren sehen den Button für die Account-Verwaltung (Benutzer anlegen etc.)
         if (currentUser.isAdmin) {
             document.getElementById('adminAccountsBtn').style.display = 'inline-block';
         } else {
@@ -931,7 +930,6 @@
             return;
         }
 
-        // In Firestore aktualisieren
         await db.collection('edp_accounts').doc(currentUser.id).update({ pass: newP1 });
         currentUser.pass = newP1;
 
@@ -939,40 +937,41 @@
         showCustomModal("Erfolg", "Dein Passwort wurde erfolgreich geändert!", false, "OK", null, "Abbrechen", true);
     });
 
-    /* Hilfsfunktion zur Bildkomprimierung für Tablet/Handy */
-    function compressImage(file, maxWidth = 1024, maxHeight = 1024, quality = 0.7) {
+    /* Zuverlässige Bildkomprimierung (Löst das Problem bei Handys und Tablets) */
+    function compressImage(file) {
         return new Promise((resolve) => {
             let reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = function (event) {
+            reader.onload = function(e) {
                 let img = new Image();
-                img.src = event.target.result;
-                img.onload = function () {
+                img.onload = function() {
+                    let canvas = document.createElement('canvas');
                     let width = img.width;
                     let height = img.height;
-
+                    
+                    let maxDim = 800; // Maximale Breite/Höhe für reibungslose Firestore-Speicherung
                     if (width > height) {
-                        if (width > maxWidth) {
-                            height = Math.round((height * maxWidth) / width);
-                            width = maxWidth;
+                        if (width > maxDim) {
+                            height = Math.round((height * maxDim) / width);
+                            width = maxDim;
                         }
                     } else {
-                        if (height > maxHeight) {
-                            width = Math.round((width * maxHeight) / height);
-                            height = maxHeight;
+                        if (height > maxDim) {
+                            width = Math.round((width * maxDim) / height);
+                            height = maxDim;
                         }
                     }
 
-                    let canvas = document.createElement('canvas');
                     canvas.width = width;
                     canvas.height = height;
                     let ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    let compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
-                    resolve(compressedDataUrl);
+                    let dataUrl = canvas.toDataURL('image/jpeg', 0.6); // Komprimierungsqualität 60%
+                    resolve(dataUrl);
                 };
+                img.src = e.target.result;
             };
+            reader.readAsDataURL(file);
         });
     }
 
@@ -1073,29 +1072,25 @@
             return;
         }
 
-        let saveMsg = async (base64Img = null) => {
-            currentChat.push({
-                sender: currentUser ? currentUser.user : 'Unbekannt',
-                time: timeStr,
-                text: noteText,
-                img: base64Img
-            });
-
-            await db.collection('edp_incidents').doc(currentDetailIncidentId).update({
-                chatMessages: currentChat
-            });
-
-            document.getElementById('noteTextInput').value = '';
-            fileInput.value = '';
-            renderChatMessages();
-        };
-
+        let compressedImg = null;
         if (fileInput.files && fileInput.files[0]) {
-            let compressedBase64 = await compressImage(fileInput.files[0]);
-            await saveMsg(compressedBase64);
-        } else {
-            await saveMsg(null);
+            compressedImg = await compressImage(fileInput.files[0]);
         }
+
+        currentChat.push({
+            sender: currentUser ? currentUser.user : 'Unbekannt',
+            time: timeStr,
+            text: noteText,
+            img: compressedImg
+        });
+
+        await db.collection('edp_incidents').doc(currentDetailIncidentId).update({
+            chatMessages: currentChat
+        });
+
+        document.getElementById('noteTextInput').value = '';
+        fileInput.value = '';
+        renderChatMessages();
     });
 
     function toggleAdminModal(show) {
@@ -1289,7 +1284,7 @@
         let funkrufname = document.getElementById('emFunkrufname').value.trim();
         let maxOrder = cloudData.einsatzmittel.length > 0 ? Math.max(...cloudData.einsatzmittel.map(e => e.orderIdx || 0)) + 1 : 1;
 
-        await db.collection('edp_einsatzmittel').doc(emId).add({ 
+        await db.collection('edp_einsatzmittel').add({ 
             funkrufname, 
             positions: [], 
             orderIdx: maxOrder,
