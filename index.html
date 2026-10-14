@@ -713,41 +713,60 @@
 
     initFirebaseSync();
 
-    function subscribeUserData(username) {
-        if (unsubIncidents) unsubIncidents();
-        if (unsubHelpers) unsubHelpers();
-        if (unsubEm) unsubEm();
+function subscribeUserData(username) {
+    if (unsubIncidents) unsubIncidents();
+    if (unsubHelpers) unsubHelpers();
+    if (unsubEm) unsubEm();
 
-        unsubIncidents = db.collection('edp_incidents').where('createdBy', '==', username).onSnapshot(snap => {
-            cloudData.incidents = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderDashboardIncidents();
-            renderArchiveIncidents();
-            if (currentDetailIncidentId) {
-                renderIncidentHelpersList();
-                updateDetailAssignedEm();
-                renderIncidentVehiclePositions();
-            }
-        });
+    // Bei Einsätzen filtern
+    unsubIncidents = db.collection('edp_incidents').onSnapshot(snap => {
+        cloudData.incidents = snap.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .filter(item => {
+                // Falls kein createdBy existiert, gehört es historisch zum adminedp
+                let owner = item.createdBy || 'adminedp';
+                return owner === username;
+            });
+        renderDashboardIncidents();
+        renderArchiveIncidents();
+        if (currentDetailIncidentId) {
+            renderIncidentHelpersList();
+            updateDetailAssignedEm();
+            renderIncidentVehiclePositions();
+        }
+    });
 
-        unsubHelpers = db.collection('edp_helpers').where('createdBy', '==', username).onSnapshot(snap => {
-            cloudData.helpers = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderHelpersList();
-            if (currentDetailIncidentId) {
-                renderIncidentHelpersList();
-            }
-        });
+    // Bei Helfern filtern
+    unsubHelpers = db.collection('edp_helpers').onSnapshot(snap => {
+        cloudData.helpers = snap.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .filter(item => {
+                let owner = item.createdBy || 'adminedp';
+                return owner === username;
+            });
+        renderHelpersList();
+        if (currentDetailIncidentId) {
+            renderIncidentHelpersList();
+        }
+    });
 
-        unsubEm = db.collection('edp_einsatzmittel').where('createdBy', '==', username).onSnapshot(snap => {
-            cloudData.einsatzmittel = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderEmList();
-            if (document.getElementById('incidentModal').style.display === 'flex') {
-                renderIncidentEmCheckboxes();
-            }
-            if (currentDetailIncidentId) {
-                renderIncidentVehiclePositions();
-            }
-        });
-    }
+    // Bei Einsatzmitteln filtern
+    unsubEm = db.collection('edp_einsatzmittel').onSnapshot(snap => {
+        cloudData.einsatzmittel = snap.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .filter(item => {
+                let owner = item.createdBy || 'adminedp';
+                return owner === username;
+            });
+        renderEmList();
+        if (document.getElementById('incidentModal').style.display === 'flex') {
+            renderIncidentEmCheckboxes();
+        }
+        if (currentDetailIncidentId) {
+            renderIncidentVehiclePositions();
+        }
+    });
+}
 
     function checkAutoLogin() {
         if (currentUser) return;
