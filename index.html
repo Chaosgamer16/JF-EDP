@@ -115,6 +115,12 @@
         .btn-primary { background-color: var(--accent-red); color: white; border: none; padding: 8px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; }
         .helper-card { background: var(--panel-bg); border: 1px solid var(--border-color); padding: 12px 16px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         
+        /* Drag & Drop Styling */
+        .helper-card.draggable-em { cursor: grab; user-select: none; transition: background-color 0.2s, opacity 0.2s, transform 0.15s; }
+        .helper-card.draggable-em:active { cursor: grabbing; }
+        .helper-card.dragging { opacity: 0.4; background: #555 !important; border: 2px dashed #aaa; }
+        .helper-card.drag-over { border-top: 3px solid var(--accent-blue); }
+
         .em-positions-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
         .em-position-box { background: #1e1e1e; border: 1px solid #444; border-radius: 4px; padding: 4px 8px; font-size: 0.8rem; color: var(--accent-orange); font-weight: bold; }
 
@@ -434,7 +440,7 @@
 <header>
     <div class="logo-area">
         <svg width="28" height="28" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#ff6b6b"/><g transform="translate(8, 8)"><rect x="2" y="2" width="36" height="26" rx="4" stroke="#ffffff" stroke-width="3" fill="#121212"/><path d="M15 34H25" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/><path d="M20 28V34" stroke="#ffffff" stroke-width="3"/><path d="M20 10C20 10 14 15 14 18.5C14 20.9853 16.0147 23 18.5 23C20.9853 23 23 20.9853 23 18.5C23 15 20 10 20 10Z" fill="#d32f2f"/><circle cx="20" cy="18" r="2.5" fill="#ffffff"/></g></svg>
-        <h1>JF-ELS // <span>Jugendfeuerwehr</span></span>   Privat Testing</span></span></h1>
+        <h1>JF-ELS // <span>Jugendfeuerwehr</span> Privat Testing</h1>
     </div>
     <div style="flex: 1; display: flex; justify-content: center; min-width: 200px;">
         <div class="search-bar" style="width: 100%; max-width: 280px;">
@@ -836,7 +842,6 @@
 
         subscribeUserData(currentUser.user);
 
-        // Der Admin edp bekommt NUR den Haupt-Verwalten Button, normale Benutzer den eigenen Passwort-Ändern Button
         if (currentUser.isAdmin) {
             document.getElementById('adminAccountsBtn').style.display = 'inline-block';
             document.getElementById('changePasswordBtn').style.display = 'none';
@@ -905,7 +910,6 @@
         document.getElementById('loginErr').innerText = '';
     }
 
-    /* Passwörter ändern (Normale Benutzer können hier Login & Lösch-Passwort ändern) */
     function toggleChangePasswordModal(show) {
         let modal = document.getElementById('changePasswordModal');
         modal.style.display = show ? 'flex' : 'none';
@@ -957,7 +961,6 @@
         showCustomModal("Erfolg", `Dein ${passType === 'login' ? 'Login' : 'Lösch'}-Passwort wurde erfolgreich geändert!`, false, "OK", null, "Abbrechen", true);
     });
 
-    /* Zuverlässige Bildkomprimierung (Löst das Problem bei Handys und Tablets) */
     function compressImage(file) {
         return new Promise((resolve) => {
             let reader = new FileReader();
@@ -995,7 +998,6 @@
         });
     }
 
-    /* Notiz & Chat-Funktionen */
     function toggleNotesModal(show) {
         let modal = document.getElementById('notesModal');
         modal.style.display = show ? 'flex' : 'none';
@@ -1180,7 +1182,7 @@
                         container.innerHTML += `
                             <label class="pos-select-label">
                                 <input type="radio" name="selectedAssignPosition" value="${em.funkrufname}:::${pos}">
-                                <span><strong>${em.funkrufname}</strong> –${pos}</span>
+                                <span><strong>${em.funkrufname}</strong> – ${pos}</span>
                             </label>
                         `;
                     });
@@ -1298,38 +1300,47 @@
         toggleHelperModal(false);
     });
 
+    /* Automatische Einsortierung für neue Fahrzeuge */
     document.getElementById('addEmForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         if (!currentUser || (!currentUser.isAdmin && !currentUser.canEdit)) return;
 
         let funkrufname = document.getElementById('emFunkrufname').value.trim();
-        let maxOrder = cloudData.einsatzmittel.length > 0 ? Math.max(...cloudData.einsatzmittel.map(e => e.orderIdx || 0)) + 1 : 1;
 
-        await db.collection('edp_einsatzmittel').add({ 
-            funkrufname, 
-            positions: [], 
-            orderIdx: maxOrder,
-            createdBy: currentUser.user 
-        });
+        // Bestehende Einsatzmittel holen
+        let existingList = [...cloudData.einsatzmittel];
+
+        // Stelle herausfinden, an welche Position der neue Name alphabetisch/numerisch gehört
+        let insertIndex = existingList.findIndex(item => item.funkrufname.localeCompare(funkrufname, undefined, { numeric: true, sensitivity: 'base' }) > 0);
+        if (insertIndex === -1) {
+            insertIndex = existingList.length;
+        }
+
+        // Neue Liste temporär zusammensetzen
+        existingList.splice(insertIndex, 0, { funkrufname });
+
+        // Batch-Update in Firestore vorbereiten, um orderIdx neu aufzuteilen
+        let batch = db.batch();
+
+        for (let i = 0; i < existingList.length; i++) {
+            let item = existingList[i];
+            let newOrder = (i + 1) * 10; // Abstufungen in 10er-Schritten für leichtes Verschieben
+            if (item.id) {
+                batch.update(db.collection('edp_einsatzmittel').doc(item.id), { orderIdx: newOrder });
+            } else {
+                let newRef = db.collection('edp_einsatzmittel').doc();
+                batch.set(newRef, {
+                    funkrufname,
+                    positions: [],
+                    orderIdx: newOrder,
+                    createdBy: currentUser.user
+                });
+            }
+        }
+
+        await batch.commit();
         toggleEmModal(false);
     });
-
-    async function moveEm(id, direction) {
-        let index = cloudData.einsatzmittel.findIndex(e => e.id === id);
-        if (index === -1) return;
-
-        let targetIndex = index + direction;
-        if (targetIndex < 0 || targetIndex >= cloudData.einsatzmittel.length) return;
-
-        let currentItem = cloudData.einsatzmittel[index];
-        let targetItem = cloudData.einsatzmittel[targetIndex];
-
-        let tempOrder = currentItem.orderIdx || index;
-        let newTargetOrder = targetItem.orderIdx || targetIndex;
-
-        await db.collection('edp_einsatzmittel').doc(currentItem.id).update({ orderIdx: newTargetOrder });
-        await db.collection('edp_einsatzmittel').doc(targetItem.id).update({ orderIdx: tempOrder });
-    }
 
     document.getElementById('addPositionForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -1491,6 +1502,9 @@
         });
     }
 
+    /* Rendern der Einsatzmittelliste inklusive Drag & Drop */
+    let draggedEmId = null;
+
     function renderEmList() {
         let container = document.getElementById('emListContainer');
         let badgeTile = document.getElementById('emTileCount');
@@ -1516,21 +1530,19 @@
                 positionsHtml = `<div style="color: var(--text-muted); font-size: 0.8rem; font-style: italic; margin-top: 4px;">Keine Positionen definiert</div>`;
             }
 
-            let upBtn = (index > 0 && canEdit) ? `<button class="btn-action" onclick="moveEm('${em.id}', -1)">▲</button>` : '';
-            let downBtn = (index < cloudData.einsatzmittel.length - 1 && canEdit) ? `<button class="btn-action" onclick="moveEm('${em.id}', 1)">▼</button>` : '';
             let posBtn = canEdit ? `<button class="btn-action" style="background: var(--accent-blue);" onclick="togglePositionModal(true, '${em.id}')">Position hinzufügen</button>` : '';
             let delPosBtn = canEdit ? `<button class="btn-action" style="background: #555;" onclick="toggleDeletePositionModal(true, '${em.id}')">Position löschen</button>` : '';
             let deleteBtn = canEdit ? `<button class="btn-action btn-delete" onclick="deleteEm('${em.id}')">Löschen</button>` : '';
 
+            let isDraggable = canEdit ? 'draggable="true"' : '';
+
             container.innerHTML += `
-                <div class="helper-card" style="align-items: flex-start;">
+                <div class="helper-card draggable-em" data-id="${em.id}" data-index="${index}" ${isDraggable} style="align-items: flex-start;">
                     <div style="flex: 1;">
                         <strong>${em.funkrufname}</strong>
                         ${positionsHtml}
                     </div>
                     <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
-                        ${upBtn}
-                        ${downBtn}
                         ${posBtn}
                         ${delPosBtn}
                         ${deleteBtn}
@@ -1538,6 +1550,75 @@
                 </div>
             `;
         });
+
+        if (currentUser && (currentUser.isAdmin || currentUser.canEdit)) {
+            attachEmDragAndDropEvents();
+        }
+    }
+
+    /* Event-Listener für das Verschieben (Drag & Drop) per Maus und Touch */
+    function attachEmDragAndDropEvents() {
+        let items = document.querySelectorAll('.draggable-em');
+
+        items.forEach(item => {
+            // Drag Start
+            item.addEventListener('dragstart', (e) => {
+                draggedEmId = item.getAttribute('data-id');
+                item.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+
+            // Drag End
+            item.addEventListener('dragend', () => {
+                item.classList.remove('dragging');
+                items.forEach(i => i.classList.remove('drag-over'));
+            });
+
+            // Drag Over
+            item.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                item.classList.add('drag-over');
+            });
+
+            // Drag Leave
+            item.addEventListener('dragleave', () => {
+                item.classList.remove('drag-over');
+            });
+
+            // Drop
+            item.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                item.classList.remove('drag-over');
+                let targetEmId = item.getAttribute('data-id');
+
+                if (draggedEmId && draggedEmId !== targetEmId) {
+                    await reorderEm(draggedEmId, targetEmId);
+                }
+            });
+        });
+    }
+
+    /* Aktualisiert die Reihenfolge in der Datenbank beim Verschieben */
+    async function reorderEm(draggedId, targetId) {
+        let currentList = [...cloudData.einsatzmittel];
+        let dragIdx = currentList.findIndex(e => e.id === draggedId);
+        let targetIdx = currentList.findIndex(e => e.id === targetId);
+
+        if (dragIdx === -1 || targetIdx === -1) return;
+
+        // Element an die neue Stelle verschieben
+        let [movedItem] = currentList.splice(dragIdx, 1);
+        currentList.splice(targetIdx, 0, movedItem);
+
+        // Reihenfolge in Firestore abspeichern
+        let batch = db.batch();
+        currentList.forEach((em, idx) => {
+            let ref = db.collection('edp_einsatzmittel').doc(em.id);
+            batch.update(ref, { orderIdx: (idx + 1) * 10 });
+        });
+
+        await batch.commit();
     }
 
     function deleteEm(id) {
