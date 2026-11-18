@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JF-ELS // Startseite - Feuerwehr</title>
+    <title>JF-ELS // Startseite</title>
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -113,7 +113,9 @@
         /* Ansichten */
         #appContainer, #helperView, #archiveView, #incidentHelperView, #emView { display: none; padding: 20px 30px; flex: 1; }
         #detailView { display: none; padding: 15px; flex: 1; }
-        #monitorView { display: none; flex: 1; flex-direction: column; background: #121212; min-height: 100vh; }
+        
+        /* FIX: Monitor Ansicht auf exakt 100vh fixiert, kein Scrollen möglich */
+        #monitorView { display: none; height: 100vh; max-height: 100vh; flex-direction: column; background: #181818; overflow: hidden; position: fixed; top: 0; left: 0; width: 100%; z-index: 99999; }
 
         .sub-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
         .btn-primary { background-color: var(--accent-red); color: white; border: none; padding: 8px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; }
@@ -155,30 +157,31 @@
         .em-badge-card { background: #222; border: 1px solid #444; border-radius: 4px; padding: 8px 10px; font-size: 0.85rem; font-weight: bold; color: #fff; display: flex; align-items: center; justify-content: space-between; }
         .em-status-dot { width: 10px; height: 10px; border-radius: 2px; background: var(--accent-green); display: inline-block; }
 
-        /* NEUE Monitor Ansicht Layout (Exakt nach Bild 4) */
-        .monitor-top-bar { background: #111; border-bottom: 1px solid #333; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 0.95rem; color: #ccc; }
-        .monitor-main-container { display: flex; flex: 1; min-height: calc(100vh - 45px); width: 100%; background: #181818; overflow: hidden; }
-        .monitor-left-panel { flex: 1.3; padding: 30px; display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid #333; }
-        .monitor-right-panel { flex: 1; position: relative; min-height: 400px; background: #222; }
+        /* Monitor Ansicht Feinabstimmung (Kein Scrollen) */
+        .monitor-top-bar { background: #111; border-bottom: 1px solid #333; padding: 8px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; color: #ccc; height: 40px; }
+        .monitor-main-container { display: flex; flex: 1; height: calc(100vh - 40px); width: 100%; background: #181818; overflow: hidden; }
+        .monitor-left-panel { flex: 1.3; padding: 20px 30px; display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid #333; overflow: hidden; }
+        .monitor-right-panel { flex: 1; position: relative; height: 100%; background: #222; overflow: hidden; }
 
-        .monitor-stichwort-box { font-size: 3.2rem; font-weight: bold; color: #fff; border-left: 6px solid var(--accent-red); padding-left: 15px; line-height: 1.1; margin-bottom: 10px; }
-        .monitor-beschreibung-text { font-size: 1.5rem; color: #aaa; margin-bottom: 30px; font-weight: normal; }
+        .monitor-stichwort-box { font-size: 2.8rem; font-weight: bold; color: #fff; border-left: 6px solid var(--accent-red); padding-left: 15px; line-height: 1.1; margin-bottom: 8px; }
+        .monitor-beschreibung-text { font-size: 1.3rem; color: #aaa; margin-bottom: 20px; font-weight: normal; }
         
-        .monitor-address-group { margin-bottom: 40px; }
-        .monitor-addr-line { font-size: 1.8rem; font-weight: 300; color: #fff; line-height: 1.3; }
+        .monitor-address-group { margin-bottom: 20px; }
+        .monitor-addr-line { font-size: 1.6rem; font-weight: 300; color: #fff; line-height: 1.2; }
 
-        .monitor-vehicles-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 20px; }
-        .monitor-veh-card { display: flex; background: #242424; border: 1px solid #3a3a3a; border-radius: 4px; overflow: hidden; font-weight: bold; font-size: 1.1rem; }
-        .monitor-veh-num { background: #b71c1c; color: #fff; padding: 8px 12px; display: flex; align-items: center; justify-content: center; min-width: 35px; }
-        .monitor-veh-name { padding: 8px 16px; color: #fff; display: flex; align-items: center; }
+        .monitor-vehicles-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 15px; max-height: 160px; overflow: hidden; }
+        .monitor-veh-card { display: flex; background: #242424; border: 1px solid #3a3a3a; border-radius: 4px; overflow: hidden; font-weight: bold; font-size: 1rem; }
+        .monitor-veh-num { background: #b71c1c; color: #fff; padding: 6px 10px; display: flex; align-items: center; justify-content: center; min-width: 30px; }
+        .monitor-veh-name { padding: 6px 14px; color: #fff; display: flex; align-items: center; }
 
-        .monitor-back-bar { display: flex; align-items: center; margin-bottom: 20px; }
+        .monitor-back-bar { display: flex; align-items: center; margin-bottom: 10px; }
 
         @media(max-width: 768px) {
             #dashboardView, #appContainer, #helperView, #archiveView, #detailView, #incidentHelperView, #emView { padding: 10px 15px; }
             .tiles-grid { justify-content: center; }
-            .monitor-main-container { flex-direction: column; }
-            .monitor-left-panel { border-right: none; border-bottom: 1px solid #333; }
+            .monitor-main-container { flex-direction: column; height: auto; }
+            .monitor-left-panel { border-right: none; border-bottom: 1px solid #333; height: auto; }
+            #monitorView { position: relative; height: auto; overflow: auto; }
         }
     </style>
 </head>
@@ -569,11 +572,10 @@
     </div>
 </div>
 
-<!-- Detail Ansicht (Layout wie Bild 3) -->
+<!-- Detail Ansicht -->
 <div id="detailView">
     <div class="detail-layout">
         <div class="detail-left">
-            <!-- Karte 1: Stichwort, Örtlichkeit, Meldung -->
             <div class="detail-card">
                 <div class="detail-top-row">
                     <span class="detail-title" id="detStichwort">-</span>
@@ -602,7 +604,6 @@
                 </div>
             </div>
 
-            <!-- Karte 2: Action-Buttons Leiste (Mit Monitor Ansicht statt Besatzung) -->
             <div class="detail-action-bar">
                 <button class="custom-btn" id="btnCompleteIncident" style="background: #b71c1c; border-color: #e53935; font-weight: bold; color: #fff;">🚨 Einsatz beenden</button>
                 <button class="custom-btn" onclick="toggleNotesModal(true)">📝 Notiz</button>
@@ -611,7 +612,6 @@
                 <button class="custom-btn btn-red-text" onclick="closeDetailView()">← Startseite</button>
             </div>
 
-            <!-- Karte 3: Beteiligte EM (Mehrspaltig) -->
             <div class="detail-card" style="flex: 1;">
                 <div style="font-weight: bold; margin-bottom: 12px; font-size: 0.95rem; color: #fff;">Beteiligte EM</div>
                 <div id="detAssignedEmContainer" class="em-grid-container">
@@ -620,7 +620,6 @@
             </div>
         </div>
 
-        <!-- Rechte Seite: Große Kartenansicht -->
         <div class="detail-right">
             <div style="position: absolute; top: 10px; right: 10px; z-index: 10;">
                 <a id="mapExternalLink" href="#" target="_blank" class="custom-btn" style="background: rgba(34,34,34,0.92); box-shadow: 0 2px 6px rgba(0,0,0,0.5); font-size: 0.75rem;">In Maps öffnen ↗</a>
@@ -630,24 +629,21 @@
     </div>
 </div>
 
-<!-- MONITOR ANSICHT (Exakt nach Bild 4 aufgebaut) -->
+<!-- MONITOR ANSICHT (Fest fixiert auf 100vh, kein Scrollen) -->
 <div id="monitorView">
-    <!-- Oben: Header Leiste mit Team & Live-Uhrzeit -->
     <div class="monitor-top-bar">
         <div>EDP Entwicklungsteam</div>
         <div id="monitorClock">-</div>
     </div>
 
-    <!-- Hauptbereich -->
     <div class="monitor-main-container">
-        <!-- Linke Seite: Einsatzinfos & Fahrzeuge -->
         <div class="monitor-left-panel">
             <div>
                 <div class="monitor-back-bar">
                     <button class="monitor-back-btn" onclick="closeMonitorView()" style="margin:0;">← Zurück zum Einsatz</button>
                 </div>
                 
-                <div style="margin-top: 15px;">
+                <div style="margin-top: 10px;">
                     <div class="monitor-stichwort-box" id="monStichwort">-</div>
                     <div class="monitor-beschreibung-text" id="monBeschreibung">-</div>
                 </div>
@@ -659,13 +655,13 @@
             </div>
 
             <div>
+                <div style="font-size: 0.85rem; color: #aaa; margin-bottom: 4px;">Zugewiesene Fahrzeuge:</div>
                 <div class="monitor-vehicles-row" id="monVehiclesContainer">
-                    <!-- Dynamische Fahrzeuge (Kacheln wie im Bild 4) -->
+                    <!-- Dynamische Fahrzeuge -->
                 </div>
             </div>
         </div>
 
-        <!-- Rechte Seite: Karte -->
         <div class="monitor-right-panel">
             <iframe id="monitorMapFrame" width="100%" height="100%" style="border:0;" loading="lazy" src=""></iframe>
         </div>
@@ -753,7 +749,6 @@
     let unsubEm = null;
     let monitorClockInterval = null;
 
-    // Live-Uhrzeit für die Monitor-Ansicht
     function startMonitorClock() {
         if (monitorClockInterval) clearInterval(monitorClockInterval);
         function updateClock() {
@@ -1898,10 +1893,9 @@
         let assignedVehicles = inc.assignedVehicles || [];
         
         if (assignedVehicles.length === 0) {
-            vehContainer.innerHTML = `<div style="color: var(--text-muted); font-size: 1rem; font-style: italic;">Keine Fahrzeuge zugewiesen.</div>`;
+            vehContainer.innerHTML = `<div style="color: var(--text-muted); font-size: 0.9rem; font-style: italic;">Keine Fahrzeuge zugewiesen.</div>`;
         } else {
             assignedVehicles.forEach((veh, idx) => {
-                // Nummerierung als Status-Badge wie im EDP-Monitor (z.B. 4, 6 etc.)
                 let statusNum = (idx + 1) * 2; 
                 vehContainer.innerHTML += `
                     <div class="monitor-veh-card">
